@@ -1,0 +1,6 @@
+[submodule "lib/sokol"]
+	path = lib/sokol
+	url = https://github.com/floooh/sokol
+[submodule "lib/Chipmunk2D"]
+	path = lib/Chipmunk2D
+	url = https://github.com/slembcke/Chipmunk2D
