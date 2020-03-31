@@ -9,7 +9,7 @@ void DrawCircle(cpVect pos, cpFloat radius, cpFloat angle, Color color);
 void DrawLine(cpVect a, cpVect b, cpFloat width, Color color);
 void DrawPolygon(cpShape* shape, Color color);
 
-void TransformScreen(void);
+void TransformScreen(cpFloat scale, cpVect translate);
 void FlushScreen(void);
 
 #endif /* DRAW_H */

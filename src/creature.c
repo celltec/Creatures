@@ -4,9 +4,76 @@
 #include "utils.h"
 #include "creature.h"
 
-Creature Spawn(void)
+// todo: change name
+static void ChangeMobility(Creature* this, cpFloat value)
 {
-	// todo: make circle if more than 10 corners or something
+	/* Limit to reasonable amount */
+	this->mobility = cpfclamp(this->mobility + value, 0, cpfpow(this->size, 1.0 / 3.0) * 1000);  /* Handcrafted magic factor */ // todo: change limit?
+}
+
+static void UseEnergy(Creature* this)
+{
+	/* Live longer with more health, bigger size and lower mobility	*/
+	this->energy -= this->mobility / this->size / (this->health * 100); /* without the *100 there's very little time */
+}
+
+static void ReplenishEnergy(Creature* this, cpFloat amount)
+{
+	if (amount > 0)
+	{
+		this->energy = cpfmin(this->energy + amount, 100.0);
+	}
+}
+
+static void Damage(Creature* this, cpFloat amount)
+{
+	if (amount > 0)
+	{
+		this->health = cpfmax(this->health - amount, 0.0);
+	}
+}
+
+static void SeekTarget(Creature* this)
+{
+	// todo
+}
+
+// todo: IMPORTANT goes in opposite direction if angle is exactly 180° (bug or feature?)
+static void Move(Creature* this)
+{
+	cpBody* body = cpShapeGetBody(this->shape);
+	const cpVect target = cpBodyWorldToLocal(body, this->target);
+
+	const cpFloat precision = cpfmin(cpfsqrt(cpvlength(target)) * 0.5 / cpfabs(cpvtoangle(target)), 10);  /* Handcrafted magic factor */
+	cpBodyApplyForceAtLocalPoint(body, cpv(precision * this->mobility  * this->size, 0.0), cpBodyGetCenterOfGravity(body));
+	cpBodySetTorque(body, cpvtoangle(target) * this->mobility * cpfpow(this->size, 2.1));  /* Handcrafted magic factor */
+}
+
+void Survive(Creature* this)
+{
+	cpBody* body = cpShapeGetBody(this->shape);
+
+	// todo: only if food was seen and is big enough or something
+	SeekTarget(this);
+	Move(this);
+	UseEnergy(this);
+
+	/* Target stuff only for testing */
+	if (cpvnear(cpBodyGetPosition(body), this->target, 6.0 + this->size)) // 5 -> size of dot
+	{
+		/* Consume test target */
+		ReplenishEnergy(this, 50.0);
+
+		/* Set a new test target */
+		this->target = randomVector(3000);
+	}
+
+	this->age++;
+}
+
+Creature* Spawn(void)
+{
+	Creature* creature = (Creature*)cpcalloc(1, sizeof(Creature));
 
 	/* For testing */
 	int corners = (int)randomRange(4, 6);
@@ -19,59 +86,60 @@ Creature Spawn(void)
 #endif
 
 	/* Some random values for testing */
-	cpFloat size = randomRange(2.0, 20.0);
-	cpVect pos = randomVector(300);
-	cpFloat mobility = randomRange(500, 1000);
-	Color color = randomColor();
+	const cpVect pos = randomVector(3000);
+	const cpFloat angle = randomRange(0.0, 2.0 * CP_PI);
+	const cpFloat size = randomRange(1.0, 100.0);
+	const cpFloat mobility = randomRange(100.0, 500.0);
+	const cpVect target = randomVector(3000);
+	const Color color = randomColor();
 
 	// todo: put in own function
 	for (int i = 0; i < corners; ++i)
 	{
 		/* For testing (to look better) */
+		cpFloat length = size;
 		if (i == corners / 2)
-			size *= 2.5;
-		if (i == corners / 2 + 1)
-			size /= 2.5;
+			length *= 2.5;
 
 		/* Calculate vertecies for polygon */
 		cpFloat angle = CP_PI * 2.0f * i / corners;
-		vertices[i] = cpvmult(cpvforangle(angle), size);
+		vertices[i] = cpvmult(cpvforangle(angle), length);
 	}
 
 	/* Create object */
 	cpBody* body = cpBodyNew(size, cpMomentForPoly(size, corners, vertices, cpvzero, 1.0));
 	cpShape* shape = cpPolyShapeNew(body, corners, vertices, cpTransformIdentity, 1.0);
-	
+	cpShapeSetFilter(shape, cpShapeFilterNew(CP_NO_GROUP, CP_ALL_CATEGORIES, CP_ALL_CATEGORIES));
+
 	/* Set initial state */
 	cpBodySetPosition(body, pos);
-	cpBodySetAngle(body, randomRange(0.0, 2.0 * CP_PI));
+	cpBodySetAngle(body, angle);
 
-	return (Creature) {
-		.shape = shape,
-		.energy = 100.0,
-		.mobility = mobility,
-		.color = color
-	};
+	creature->shape = shape;
+	creature->size = size;
+	creature->energy = 100.0;
+	creature->health = 100.0;
+	creature->mobility = mobility;
+	creature->target = target;
+	creature->color = color;
+	creature->age = 0;
+
+	return creature;
 }
 
-void Update(Creature* this)
+void Kill(Creature* this)
 {
+	cpSpace* space = cpShapeGetSpace(this->shape);
 	cpBody* body = cpShapeGetBody(this->shape);
 
-	/* Apply Forces */
-	cpBodyApplyForceAtLocalPoint(body, cpv(this->mobility * cpfsqrt(cpBodyGetMass(body)), 0.0), cpBodyGetCenterOfGravity(body));
-	cpBodySetTorque(body, this->mobility * cpvtoangle(cpBodyWorldToLocal(body, this->target)) * cpfpow(cpBodyGetMass(body) / 3.0, 2.0));  /* [magic number] pow(mass/3,2) looks better */
+	/* Remove shape before freeing the body or you will access dangling pointers */
+	cpSpaceRemoveShape(space, this->shape);
+	cpShapeFree(this->shape);
+	cpSpaceRemoveBody(space, body);
+	cpBodyFree(body);
 }
 
 void Draw(Creature* this)
 {
 	DrawPolygon(this->shape, this->color);
-
-	/* For testing */
-	DrawDot(this->target, 5.0, black);
-}
-
-void Destroy(Creature* this)
-{
-	// todo: implement
 }
