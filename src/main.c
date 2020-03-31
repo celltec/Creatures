@@ -5,32 +5,31 @@
 #include "free.h"
 #include "draw.h"
 #include "utils.h"
+#include "shader.h"
 #include "creature.h"
+#include "environment.h"
 
-#define AMOUNT 15
+#define AMOUNT 100
 
-// todo: dynamic heap allocation
-static Creature creatures[AMOUNT];
-
-static cpSpace* space; // todo: put in environment (eine globale struct in der space, timestep, und alle scale/translate Koordinaten drin sind)
-static const cpFloat timeStep = 1.0 / 60.0;  /* For 60 Hz */
+static Environment* world;
 
 static void Init(void);
-static void Frame(void);
+static void Update(void);
 static void Event(const sapp_event*);
 static void Cleanup(void);
 
 int main(void) // todo: config via arguments
 {
 	stm_setup();
+	srand((int)stm_now());
 
 	sapp_desc app = {
 		.init_cb = Init,
-		.frame_cb = Frame,
+		.frame_cb = Update,
 		.event_cb = Event,
 		.cleanup_cb = Cleanup,
-		.width = 1200,
-		.height = 1000,
+		.width = 800,
+		.height = 800,
 		.fullscreen = cpFalse,
 		.high_dpi = cpTrue,
 		.sample_count = 4,  /* MSAA */
@@ -40,75 +39,59 @@ int main(void) // todo: config via arguments
 	return sapp_run(&app);
 }
 
+static void NewCreature(void)
+{
+	/* Create instance */
+	Creature* creature = Spawn();
+
+	/* Register components */
+	cpArrayPush(world->creatures, creature);
+	cpSpaceAddBody(world->space, cpShapeGetBody(creature->shape));
+	cpSpaceAddShape(world->space, creature->shape);
+}
+
 static void Init(void)
 {
-	srand((int)stm_now());
+	InitGfx();
 
-	/* Initialize sokol */
-	sg_desc desc = { 0 };
-	sg_setup(&desc);
-	cpAssertHard(sg_isvalid(), "failed to initialize sokol_gfx");
-
-	InitDraw();
-
-	/* Initialize the global space */
-	space = cpSpaceNew();
-	cpSpaceSetDamping(space, 0.000001);        /* Bodies shouldn't retain their velocity */
-	cpSpaceSetCollisionBias(space, 0.000001);  /* Push apart overlapping bodies very fast */
+	world = NewEnvironment();
 
 	/* Spawn some creatures for testing */
 	for (int i = 0; i < AMOUNT; ++i)
 	{
-		/* Create instance */
-		Creature creature = Spawn();
-
-		/* Register components */
-		creatures[i] = creature;
-		cpSpaceAddBody(space, cpShapeGetBody(creature.shape));
-		cpSpaceAddShape(space, creature.shape);
+		NewCreature();
 	}
 }
 
-/* For testing */
-static cpVect target;
-
-static void Frame(void)
+static void Update(void)
 {
 	/* Calculate physics */
-	cpSpaceStep(space, timeStep);
+	cpSpaceStep(world->space, world->timeStep);
 
-	TransformScreen(); // todo: change this
+	TransformScreen(world->viewScale, world->viewTranslate); // todo: change this
 
-	for (int i = 0; i < AMOUNT; ++i)
+	for (int i = 0; i < world->creatures->num; ++i)
 	{
-		cpBody* body = cpShapeGetBody((creatures + i)->shape);
+		Creature* creature = (Creature*)world->creatures->arr[i];
 
-		(creatures + i)->energy -= 0.1 / cpBodyGetMass(body);  /* 0.1 gives enough time to live */
+		Survive(creature);
+		Draw(creature);
 
-		/* Target stuff only for testing */
-		if (cpvnear(cpBodyGetPosition(body), (creatures + i)->target, 1 + cpBodyGetMass(body)))
-		{
-			target = randomVector(250);
-
-			(creatures + i)->energy = 100;
-			(creatures + i)->mobility += 50;
-			(creatures + i)->color = randomColor();
-		}
+		/* For testing */
+		//DrawDot(creature->target, 10.0, black);
 	}
 
-	for (int i = 0; i < AMOUNT; ++i)
+	/* Check the creatures health separately to avoid changing the list mid-loop */
+	for (int i = 0; i < world->creatures->num; ++i)
 	{
-		(creatures + i)->target = target;
+		Creature* creature = (Creature*)world->creatures->arr[i];
 
-		if ((creatures + i)->energy < 0)
+		if (creature->energy < 0.0)
 		{
-			/* Creature is dead and becomes a ghost */
-			(creatures + i)->color.a = 0.1;
-			(creatures + i)->mobility = 100;
+			/* Creature dies :( */
+			Kill(creature);
+			cpArrayDeleteObj(world->creatures, creature);
 		}
-
-		Update(creatures + i);
-		Draw(creatures + i);
 	}
 
 	FlushScreen(); // todo: change this
@@ -120,18 +103,34 @@ static void Event(const sapp_event* event)
 	{
 		switch (event->key_code)
 		{
+		/* Exit the programm with escape */
 		case SAPP_KEYCODE_ESCAPE:
 			exit(0);
 			break;
+
+		/* Add a creature with spacebar */
+		case SAPP_KEYCODE_SPACE:
+			NewCreature();
+			break;
+
 		default:
 			break;
 		}
+	}
+	else if (event->type == SAPP_EVENTTYPE_MOUSE_SCROLL)
+	{
+		/* Some scroll limit */
+		const float scrollMin = 0.1;
+		const float scrollMax = 20.0;
+		const float scrollIntensity = 20.0;
+
+		world->viewScale = cpfclamp(world->viewScale * (1.0 + event->scroll_y / scrollIntensity), scrollMin, scrollMax);
 	}
 }
 
 static void Cleanup(void)
 {
-	FreeAllChildren(space);
-	cpSpaceFree(space);
+	FreeAllChildren(world->space);
+	cpSpaceFree(world->space);
 	sg_shutdown();
 }

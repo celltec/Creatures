@@ -32,7 +32,7 @@ static inline cpSpaceDebugColor LAColor(float l, float a) {
     return color;
 }
 
-void ChipmunkDebugDrawInit(void);
+void InitGfx(void);
 
 extern cpTransform ChipmunkDebugDrawVPMatrix;
 extern float ChipmunkDebugDrawPointLineScale;

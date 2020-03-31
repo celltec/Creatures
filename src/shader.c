@@ -47,7 +47,7 @@ typedef struct {
 	float U_vp_matrix[16];
 } Uniforms;
 
-// Meh, just max out 16 bit index size.
+// todo: dynamic heap allocation
 #define VERTEX_MAX (64*1024)
 #define INDEX_MAX (4*VERTEX_MAX)
 
@@ -57,9 +57,13 @@ static size_t VertexCount, IndexCount;
 static Vertex Vertexes[VERTEX_MAX];
 static Index Indexes[INDEX_MAX];
 
-void
-ChipmunkDebugDrawInit(void)
+void InitGfx(void)
 {
+	/* Initialize sokol */
+	sg_desc desc = { 0 };
+	sg_setup(&desc);
+	cpAssertHard(sg_isvalid(), "failed to initialize sokol_gfx");
+
 	VertexBuffer = sg_make_buffer(&(sg_buffer_desc) {
 		.label = "ChipmunkDebugDraw Vertex Buffer",
 			.size = VERTEX_MAX * sizeof(Vertex),

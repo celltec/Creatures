@@ -9,11 +9,6 @@ static cpSpaceDebugColor ColorToSpaceDebugColor(Color c)
 	return (cpSpaceDebugColor) { c.r, c.g, c.b, c.a };
 }
 
-void InitDraw(void)
-{
-	ChipmunkDebugDrawInit();
-}
-
 void DrawDot(cpVect pos, cpFloat size, Color color)
 {
 	ChipmunkDebugDrawDot(size, pos, ColorToSpaceDebugColor(color));
@@ -57,12 +52,9 @@ static sg_pass_action action = {
 	.colors[0] = {.action = SG_ACTION_CLEAR, .val = { 1.0f, 1.0f, 1.0f, 1.0f } }, /* White background */
 };
 
-void TransformScreen(void) // todo: change this
+void TransformScreen(cpFloat scale, cpVect translate) // todo: change this
 {
 	ChipmunkDebugDrawClearRenderer();
-
-	cpFloat scale = 1.0;
-	cpVect translate = cpvzero;
 
 	cpVect screen_size = { sapp_width(), sapp_height() };
 	cpTransform view_matrix = cpTransformMult(cpTransformScale(scale, scale), cpTransformTranslate(translate));
