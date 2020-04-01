@@ -63,6 +63,14 @@ static void Init(void)
 	}
 }
 
+static void FollowCreature(void)  // todo: smooth transition
+{
+	if (world->selectedCreature)
+	{
+		world->view.offset = cpvneg(cpBodyGetPosition(cpShapeGetBody(world->selectedCreature->shape)));
+	}
+}
+
 static void SmoothScaling(void)
 {
 	static const int scrollResistance = 10;  /* Slow down scrolling to look nicer  */
@@ -81,7 +89,9 @@ static void Update(void)
 	/* Calculate physics */
 	cpSpaceStep(world->space, world->timeStep);
 
+	FollowCreature();
 	SmoothScaling();
+
 	TransformScreen(world->view.scale, world->view.offset);
 	world->view.ready = cpTrue;
 
@@ -105,7 +115,13 @@ static void Update(void)
 		{
 			/* Creature dies :( */
 			Kill(creature);
+
 			cpArrayDeleteObj(world->creatures, creature);
+
+			if (creature == world->selectedCreature)
+			{
+				world->selectedCreature = NULL;
+			}
 		}
 	}
 
@@ -119,6 +135,26 @@ static cpVect MouseToSpace(const sapp_event* event)  // todo: put in environment
 
 	/* Use the VP matrix to transform to world space */
 	return cpTransformPoint(cpTransformInverse(ChipmunkDebugDrawVPMatrix), unitVect);
+}
+
+static void SelectCreature(const cpVect pos)
+{
+	cpShape *nearest = cpSpacePointQueryNearest(world->space, pos, 0.0, CP_SHAPE_FILTER_ALL, NULL);
+	
+	if (!nearest) return;
+
+	Creature* creature;
+
+	for (int i = 0; i < world->creatures->num; ++i)
+	{
+		creature = (Creature*)world->creatures->arr[i];
+
+		if (creature->shape == nearest)
+		{
+			world->selectedCreature = creature;
+			break; // todo: scaling
+		}
+	}
 }
 
 static void Event(const sapp_event* event)
@@ -151,8 +187,12 @@ static void Event(const sapp_event* event)
 
 		if (event->mouse_button == SAPP_MOUSEBUTTON_LEFT)
 		{
-			// todo: select creature
 			world->mouse.leftPressed = cpTrue;
+
+			/* Release creature to start manually panning (again) */
+			world->selectedCreature = NULL;
+
+			SelectCreature(MouseToSpace(event));
 		}
 		else if (event->mouse_button == SAPP_MOUSEBUTTON_RIGHT)
 		{
