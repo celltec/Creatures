@@ -9,22 +9,18 @@
 #include "creature.h"
 #include "environment.h"
 
-#include <stdio.h>
-
-#define AMOUNT 100
+#define AMOUNT 2500
 
 static Environment* world;
 
 static void Init(void);
 static void Update(void);
 static void Event(const sapp_event*);
-static cpVect MouseToSpace(const sapp_event* event);
 static void Cleanup(void);
 
 int main(void)
 {
 	stm_setup();
-	srand((int)stm_now());
 
 	sapp_desc app = {
 		.init_cb = Init,
@@ -56,6 +52,7 @@ static void NewCreature(void)
 static void Init(void)
 {
 	InitGfx();
+	srand((int)stm_now());
 
 	world = NewEnvironment();
 
@@ -66,12 +63,27 @@ static void Init(void)
 	}
 }
 
+static void SmoothScaling(void)
+{
+	static const int scrollResistance = 10;  /* Slow down scrolling to look nicer  */
+
+	cpFloat difference = world->view.scale - world->view.targetScale;
+	world->view.scale -= difference / scrollResistance;
+
+	if (cpfabs(difference) < world->view.scale / scrollResistance)  /* Some relative value that looks good */
+	{
+		world->view.targetScale = world->view.scale;  /* Stop early to prevent changing forever */
+	}
+}
+
 static void Update(void)
 {
 	/* Calculate physics */
 	cpSpaceStep(world->space, world->timeStep);
 
-	TransformScreen(world->view.scale, world->view.offset); // todo: change this
+	SmoothScaling();
+	TransformScreen(world->view.scale, world->view.offset);
+	world->view.ready = cpTrue;
 
 	for (int i = 0; i < world->creatures->num; ++i)
 	{
@@ -97,9 +109,16 @@ static void Update(void)
 		}
 	}
 
-	FlushScreen(); // todo: change this
+	FlushScreen();
+}
 
-	world->view.ready = cpTrue;
+static cpVect MouseToSpace(const sapp_event* event)  // todo: put in environment? VPMatrix should also be there
+{
+	/* Calculate clip coordinates for mouse */
+	cpVect unitVect = cpv(2.0 * event->mouse_x / sapp_width() - 1.0, 1.0 - 2.0 * event->mouse_y / sapp_height());
+
+	/* Use the VP matrix to transform to world space */
+	return cpTransformPoint(cpTransformInverse(ChipmunkDebugDrawVPMatrix), unitVect);
 }
 
 static void Event(const sapp_event* event)
@@ -155,7 +174,7 @@ static void Event(const sapp_event* event)
 
 	case SAPP_EVENTTYPE_MOUSE_MOVE:
 	{
-		if (world->mouse.rightPressed)
+		if (world->mouse.leftPressed)
 		{
 			cpVect direction = cpvsub(MouseToSpace(event), world->mouse.pos);
 
@@ -170,27 +189,27 @@ static void Event(const sapp_event* event)
 
 	case SAPP_EVENTTYPE_MOUSE_SCROLL:
 	{
-		/* Some scroll limit */
-		const float scrollMin = 0.001f;
-		const float scrollMax = 20.0f;
-		const float scrollIntensity = 20.0f;
+		/* Some arbitrary scroll limits */
+		static const float min = 0.0005f;  /* Theoretically open to be smaller */
+		static const float max = 20.0f;    /* The smallest creature is already big enough at this scale */
 
-		/* Modify zoom */
-		world->view.scale = cpfclamp(world->view.scale * (1.0f + event->scroll_y / scrollIntensity), scrollMin, scrollMax);
+		if (world->view.ready)  /* Prevent multiple executions per frame */
+		{
+			cpFloat factor = 1.0f + event->scroll_y / 10.0f;  /* Make smaller scrolling steps */
+
+			/* Modify zoom */
+			world->view.targetScale = cpfclamp(world->view.targetScale * factor, min, max);
+			
+			// todo: ask floooh to change sokol_app.h on line 4303, because i need mouse pos with scroll event
+			// todo: zoom to mouse position (do after shader refactoring)
+
+			world->view.ready = cpFalse;
+		}
 	} break;
 
 	default:
 		break;
 	}
-}
-
-static cpVect MouseToSpace(const sapp_event* event) // todo: put in environment? because if the VPMatrix is also there...
-{
-	/* Calculate clip coordinates for mouse */
-	cpVect clipCoord = cpv(2.0 * event->mouse_x / sapp_width() - 1.0, 1.0 - 2.0 * event->mouse_y / sapp_height());
-
-	/* Use the VP matrix to transform to world space */
-	return cpTransformPoint(cpTransformInverse(ChipmunkDebugDrawVPMatrix), clipCoord);
 }
 
 static void Cleanup(void)
