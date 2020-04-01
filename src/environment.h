@@ -7,9 +7,18 @@ typedef struct {
 	cpSpace* space;
 	cpArray* creatures;
 	cpFloat timeStep;
-	cpFloat viewScale;
-	cpVect viewTranslate;
-	// todo: coordinates
+
+	struct {
+		cpVect offset;
+		cpFloat scale;
+		cpBool ready;
+	} view;
+
+	struct {
+		cpVect pos;
+		cpBool leftPressed;
+		cpBool rightPressed;
+	} mouse;
 } Environment;
 
 Environment* NewEnvironment(void);

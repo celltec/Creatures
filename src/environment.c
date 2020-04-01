@@ -14,8 +14,7 @@ Environment* NewEnvironment(void)
 	environment->space = space;
 	environment->creatures = cpArrayNew(0);
 	environment->timeStep = 1.0 / 60.0;  /* For 60 Hz */
-	environment->viewScale = 1.0;
-	environment->viewTranslate = cpvzero;
+	environment->view.scale = 0.2;
 
 	return environment;
 }

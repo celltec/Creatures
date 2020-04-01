@@ -9,6 +9,8 @@
 #include "creature.h"
 #include "environment.h"
 
+#include <stdio.h>
+
 #define AMOUNT 100
 
 static Environment* world;
@@ -16,9 +18,10 @@ static Environment* world;
 static void Init(void);
 static void Update(void);
 static void Event(const sapp_event*);
+static cpVect MouseToSpace(const sapp_event* event);
 static void Cleanup(void);
 
-int main(void) // todo: config via arguments
+int main(void)
 {
 	stm_setup();
 	srand((int)stm_now());
@@ -68,7 +71,7 @@ static void Update(void)
 	/* Calculate physics */
 	cpSpaceStep(world->space, world->timeStep);
 
-	TransformScreen(world->viewScale, world->viewTranslate); // todo: change this
+	TransformScreen(world->view.scale, world->view.offset); // todo: change this
 
 	for (int i = 0; i < world->creatures->num; ++i)
 	{
@@ -95,11 +98,15 @@ static void Update(void)
 	}
 
 	FlushScreen(); // todo: change this
+
+	world->view.ready = cpTrue;
 }
 
 static void Event(const sapp_event* event)
 {
-	if (event->type == SAPP_EVENTTYPE_KEY_DOWN)
+	switch (event->type)
+	{
+	case SAPP_EVENTTYPE_KEY_DOWN:
 	{
 		switch (event->key_code)
 		{
@@ -116,16 +123,74 @@ static void Event(const sapp_event* event)
 		default:
 			break;
 		}
-	}
-	else if (event->type == SAPP_EVENTTYPE_MOUSE_SCROLL)
+	} break;
+
+	case SAPP_EVENTTYPE_MOUSE_DOWN:
+	{
+		/* Store mouse coordinates */
+		world->mouse.pos = MouseToSpace(event);
+
+		if (event->mouse_button == SAPP_MOUSEBUTTON_LEFT)
+		{
+			// todo: select creature
+			world->mouse.leftPressed = cpTrue;
+		}
+		else if (event->mouse_button == SAPP_MOUSEBUTTON_RIGHT)
+		{
+			world->mouse.rightPressed = cpTrue;
+		}
+	} break;
+
+	case SAPP_EVENTTYPE_MOUSE_UP:
+	{
+		if (event->mouse_button == SAPP_MOUSEBUTTON_LEFT)
+		{
+			world->mouse.leftPressed = cpFalse;
+		}
+		else if (event->mouse_button == SAPP_MOUSEBUTTON_RIGHT)
+		{
+			world->mouse.rightPressed = cpFalse;
+		}
+	} break;
+
+	case SAPP_EVENTTYPE_MOUSE_MOVE:
+	{
+		if (world->mouse.rightPressed)
+		{
+			cpVect direction = cpvsub(MouseToSpace(event), world->mouse.pos);
+
+			if (world->view.ready)  /* Prevent multiple executions per frame */
+			{
+				/* Move view */
+				world->view.offset = cpvadd(world->view.offset, direction);
+				world->view.ready = cpFalse;
+			}
+		}
+	} break;
+
+	case SAPP_EVENTTYPE_MOUSE_SCROLL:
 	{
 		/* Some scroll limit */
-		const float scrollMin = 0.1;
-		const float scrollMax = 20.0;
-		const float scrollIntensity = 20.0;
+		const float scrollMin = 0.001f;
+		const float scrollMax = 20.0f;
+		const float scrollIntensity = 20.0f;
 
-		world->viewScale = cpfclamp(world->viewScale * (1.0 + event->scroll_y / scrollIntensity), scrollMin, scrollMax);
+		/* Modify zoom */
+		world->view.scale = cpfclamp(world->view.scale * (1.0f + event->scroll_y / scrollIntensity), scrollMin, scrollMax);
+	} break;
+
+	default:
+		break;
 	}
+}
+
+static cpVect MouseToSpace(const sapp_event* event) // todo: put in environment? because if the VPMatrix is also there...
+{
+	/* Calculate clip coordinates for mouse */
+	cpVect clipCoord = cpv(2.0 * event->mouse_x / sapp_width() - 1.0, 1.0 - 2.0 * event->mouse_y / sapp_height());
+
+	/* Use the VP matrix to transform to world space */
+	return cpTransformPoint(cpTransformInverse(ChipmunkDebugDrawVPMatrix), clipCoord);
 }
 
 static void Cleanup(void)
