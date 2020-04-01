@@ -62,10 +62,10 @@ void Survive(Creature* this)
 	if (cpvnear(cpBodyGetPosition(body), this->target, 6.0 + this->size)) // 5 -> size of dot
 	{
 		/* Consume test target */
-		ReplenishEnergy(this, 50.0);
+		ReplenishEnergy(this, 100.0);
 
 		/* Set a new test target */
-		this->target = randomVector(3000);
+		this->target = randomVector(5000000);
 	}
 
 	this->age++;
@@ -86,11 +86,11 @@ Creature* Spawn(void)
 #endif
 
 	/* Some random values for testing */
-	const cpVect pos = randomVector(3000);
+	const cpVect pos = randomVector(5000000);
 	const cpFloat angle = randomRange(0.0, 2.0 * CP_PI);
-	const cpFloat size = randomRange(1.0, 100.0);
-	const cpFloat mobility = randomRange(100.0, 500.0);
-	const cpVect target = randomVector(3000);
+	const cpFloat size = randomRange(1.0, 5000.0);
+	const cpFloat mobility = randomRange(50.0, 10000.0);
+	const cpVect target = randomVector(5000000);
 	const Color color = randomColor();
 
 	// todo: put in own function
