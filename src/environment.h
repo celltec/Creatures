@@ -2,11 +2,13 @@
 #define ENVIRONMENT_H
 
 #include "chipmunk/chipmunk_private.h"
+#include "creature.h"
 
 typedef struct {
 	cpSpace* space;
 	cpArray* creatures;
 	cpFloat timeStep;
+	Creature* selectedCreature;
 
 	struct {
 		cpVect offset;
