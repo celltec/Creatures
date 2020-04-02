@@ -50,7 +50,8 @@ void TestList(int cases)
 
 	Remove(testList, testList->list[someIndex], NULL);
 	cpAssertHard(testList->count == cases - 1, "failed test");
-	cpAssertHard(testList->list[someIndex] != testCreature, "failed test");
+	if (testList->list)
+		cpAssertHard(testList->list[someIndex] != testCreature, "failed test");
 	cpAssertHard(testCreature->health == 100.0, "failed test");
 
 	Add(testList, testCreature);
