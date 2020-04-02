@@ -12,8 +12,10 @@ typedef struct {
 
 	struct {
 		cpVect offset;
+		cpVect targetOffset;
 		cpFloat scale;
 		cpFloat targetScale;
+		cpBool moved;
 		cpBool ready;
 	} view;
 
