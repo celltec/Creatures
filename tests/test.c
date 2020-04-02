@@ -37,7 +37,7 @@ void TestList(int cases)
 
 	for (int i = 0; i < cases; ++i)
 	{
-		Creature* creature = Spawn();
+		Creature* creature = Spawn(randomVector(1000), randomRange(10.0, 100.0));
 		cpSpaceAddBody(environment->space, cpShapeGetBody(creature->shape));
 		cpSpaceAddShape(environment->space, creature->shape);
 		Add(testList, creature);
@@ -71,8 +71,8 @@ void TestList(int cases)
 	cpAssertHard(testList->count == 0, "failed test");
 
 
-	Creature* newCreature1 = Spawn();
-	Creature* newCreature2 = Spawn();
+	Creature* newCreature1 = Spawn(randomVector(1000), randomRange(10.0, 100.0));
+	Creature* newCreature2 = Spawn(randomVector(1000), randomRange(10.0, 100.0));
 	cpSpaceAddBody(environment->space, cpShapeGetBody(newCreature2->shape));
 	cpSpaceAddShape(environment->space, newCreature2->shape);
 

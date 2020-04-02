@@ -18,7 +18,7 @@ typedef struct {
 
 } Creature;
 
-Creature* Spawn(void);
+Creature* Spawn(const cpVect pos, const cpFloat size);
 void Survive(Creature*);
 void Kill(Creature*);
 void Draw(Creature*);

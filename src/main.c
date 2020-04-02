@@ -14,7 +14,7 @@
 #include "creature.h"
 #include "environment.h"
 
-#define AMOUNT 500
+#define AMOUNT 1000
 
 static Environment* world;
 
@@ -45,16 +45,20 @@ int main(void)
 
 static void CreateCreature(void)
 {
+	/* Some random values for testing */
+	const cpVect pos = randomVector(300000);
+	const cpFloat size = randomRange(10.0, 1000.0);
+
 	/* Create instance */
-	Creature* creature = Spawn();
+	Creature* creature = Spawn(pos, size);
 
 	/* Register components */
 	Add(world->creatures, creature);
 	cpSpaceAddBody(world->space, cpShapeGetBody(creature->shape));
 	cpSpaceAddShape(world->space, creature->shape);
 #ifdef DEBUG
-	cpVect pos = cpBodyGetPosition(cpShapeGetBody(creature->shape));
-	printf("Spawned a creature:\n pos: (%.0f, %.0f)\n size: %.0f\n mobility: %.0f\n\n", pos.x, pos.y, creature->size, creature->mobility);
+	cpVect debugPos = cpBodyGetPosition(cpShapeGetBody(creature->shape));
+	printf("Spawned a creature:\n pos: (%.0f, %.0f)\n size: %.0f\n mobility: %.0f\n\n", debugPos.x, debugPos.y, creature->size, creature->mobility);
 #endif
 }
 
@@ -180,7 +184,7 @@ static cpVect MouseToSpace(const sapp_event* event)  // todo: put in environment
 
 static void SelectCreature(const cpVect pos)
 {
-	cpShape *nearest = cpSpacePointQueryNearest(world->space, pos, 0.0, CP_SHAPE_FILTER_ALL, NULL);
+	cpShape *nearest = cpSpacePointQueryNearest(world->space, pos, 200.0, CP_SHAPE_FILTER_ALL, NULL);  /* You don't have to click so exactly with a 200 radius */
 	
 	if (!nearest) return;
 
