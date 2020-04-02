@@ -137,6 +137,8 @@ void Kill(Creature* this)
 	cpShapeFree(this->shape);
 	cpSpaceRemoveBody(space, body);
 	cpBodyFree(body);
+
+	cpfree(this);
 }
 
 void Draw(Creature* this)

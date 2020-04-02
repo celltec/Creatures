@@ -14,7 +14,7 @@ typedef struct {
 	int age;
 
 	// todo: is making a function table here usefull?
-	// todo: make state machine: idle, hunting, etc
+	// todo: state machine: idle, hunting, etc
 
 } Creature;
 
