@@ -2,6 +2,7 @@
 
 #define SOKOL_IMPL
 #include "sokol.h"
+#include "test.h"
 #include "free.h"
 #include "draw.h"
 #include "utils.h"
@@ -113,15 +114,14 @@ static void Update(void)
 
 		if (creature->energy < 0.0)
 		{
-			/* Creature dies :( */
-			Kill(creature);
-
 			cpArrayDeleteObj(world->creatures, creature);
 
 			if (creature == world->selectedCreature)
 			{
 				world->selectedCreature = NULL;
 			}
+
+			Kill(creature);
 		}
 	}
 
@@ -173,6 +173,10 @@ static void Event(const sapp_event* event)
 		/* Add a creature with spacebar */
 		case SAPP_KEYCODE_SPACE:
 			NewCreature();
+			break;
+
+		case SAPP_KEYCODE_T:
+			Test(world);
 			break;
 
 		default:
@@ -256,5 +260,6 @@ static void Cleanup(void)
 {
 	FreeAllChildren(world->space);
 	cpSpaceFree(world->space);
+	cpfree(world);
 	sg_shutdown();
 }
