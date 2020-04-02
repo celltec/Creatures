@@ -224,10 +224,6 @@ static void Event(const sapp_event* event)
 			CreateCreature();
 			break;
 
-		case SAPP_KEYCODE_T:
-			Test();
-			break;
-
 		default:
 			break;
 		}
