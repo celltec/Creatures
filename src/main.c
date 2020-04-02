@@ -2,11 +2,11 @@
 
 #ifdef DEBUG
 #include <stdio.h>
+#include "../tests/test.h"
 #endif
 
 #define SOKOL_IMPL
 #include "sokol.h"
-#include "test.h"
 #include "free.h"
 #include "draw.h"
 #include "utils.h"
@@ -43,7 +43,7 @@ int main(void)
 	return sapp_run(&app);
 }
 
-static void NewCreature(void)
+static void CreateCreature(void)
 {
 	/* Create instance */
 	Creature* creature = Spawn();
@@ -60,44 +60,66 @@ static void NewCreature(void)
 
 static void Init(void)
 {
-#ifdef DEBUG
-	printf("Started\n\n");
-#endif
-	InitGfx();
 	srand((int)stm_now());
 
 #ifdef DEBUG
+	printf("Started\n\n");
 	Test();
 #endif
+
+	InitGfx();
 
 	world = NewEnvironment();
 
 	/* Spawn some creatures for testing */
 	for (int i = 0; i < AMOUNT; ++i)
 	{
-		NewCreature();
+		CreateCreature();
 	}
 }
 
-static void FollowCreature(void)  // todo: smooth transition
+static void FollowCreature(void)
 {
 	if (world->selectedCreature)
 	{
-		world->view.offset = cpvneg(cpBodyGetPosition(cpShapeGetBody(world->selectedCreature->shape)));
+		world->view.targetOffset = cpvneg(cpBodyGetPosition(cpShapeGetBody(world->selectedCreature->shape)));
 	}
+	else
+	{
+		world->view.targetOffset = world->view.offset;
+	}
+}
+
+static void SmoothTranslate(void)
+{
+	static const int resistance = 10;
+
+	cpVect difference = cpvsub(world->view.offset, world->view.targetOffset);
+
+	if (cpvlength(difference) < world->view.scale / resistance)
+	{
+		world->view.targetOffset = world->view.offset;
+		return;  /* Stop early to prevent changing forever */
+	}
+
+	/* Approach desired value by subtracting some relative value so it looks good */
+	world->view.offset = cpvsub(world->view.offset, cpvmult(difference, 1.0 / resistance));
 }
 
 static void SmoothScaling(void)
 {
-	static const int scrollResistance = 10;  /* Slow down scrolling to look nicer  */
+	static const int resistance = 10;
 
 	cpFloat difference = world->view.scale - world->view.targetScale;
-	world->view.scale -= difference / scrollResistance;
 
-	if (cpfabs(difference) < world->view.scale / scrollResistance)  /* Some relative value that looks good */
+	if (cpfabs(difference) < world->view.scale / resistance)
 	{
-		world->view.targetScale = world->view.scale;  /* Stop early to prevent changing forever */
+		world->view.targetScale = world->view.scale;
+		return;  /* Stop early to prevent changing forever */
 	}
+
+	/* Approach desired value by subtracting some relative value so it looks good */
+	world->view.scale -= difference / resistance;
 }
 
 static void Update(void)
@@ -107,6 +129,7 @@ static void Update(void)
 
 	FollowCreature();
 	SmoothScaling();
+	SmoothTranslate();
 
 	TransformScreen(world->view.scale, world->view.offset);
 	world->view.ready = cpTrue;
@@ -138,6 +161,7 @@ static void Update(void)
 			cpVect pos = cpBodyGetPosition(cpShapeGetBody(creature->shape));
 			printf("Creature dies:\n pos: (%.0f, %.0f)\n size: %.0f\n mobility: %.0f\n\n", pos.x, pos.y, creature->size, creature->mobility);
 #endif
+
 			Remove(world->creatures, creature, Kill);
 		}
 	}
@@ -167,10 +191,12 @@ static void SelectCreature(const cpVect pos)
 		if (creature->shape == nearest)
 		{
 			world->selectedCreature = creature;
+
 #ifdef DEBUG
 			cpVect pos = cpBodyGetPosition(cpShapeGetBody(creature->shape));
 			printf("Select:\n pos: (%.0f, %.0f)\n size: %.0f\n energy: %.0f\n health: %.0f\n mobility: %.0f\n\n", pos.x, pos.y, creature->size, creature->energy, creature->health, creature->mobility);
 #endif
+
 			break; // todo: scaling
 		}
 	}
@@ -191,7 +217,7 @@ static void Event(const sapp_event* event)
 
 		/* Add a creature with spacebar */
 		case SAPP_KEYCODE_SPACE:
-			NewCreature();
+			CreateCreature();
 			break;
 
 		case SAPP_KEYCODE_T:
@@ -207,6 +233,7 @@ static void Event(const sapp_event* event)
 	{
 		/* Store mouse coordinates */
 		world->mouse.pos = MouseToSpace(event);
+
 #ifdef DEBUG
 		printf("Click (%.0f, %.0f)\n\n", world->mouse.pos.x, world->mouse.pos.y);
 #endif
@@ -217,12 +244,14 @@ static void Event(const sapp_event* event)
 
 			/* Release creature to start manually panning (again) */
 			world->selectedCreature = NULL;
-
-			SelectCreature(MouseToSpace(event));
 		}
 		else if (event->mouse_button == SAPP_MOUSEBUTTON_RIGHT)
 		{
 			world->mouse.rightPressed = cpTrue;
+
+			/* Stop creature for testing */
+			if(world->selectedCreature)
+				world->selectedCreature->mobility = 0;
 		}
 	} break;
 
@@ -230,6 +259,12 @@ static void Event(const sapp_event* event)
 	{
 		if (event->mouse_button == SAPP_MOUSEBUTTON_LEFT)
 		{
+			if (world->mouse.leftPressed && !world->view.moved)
+			{
+				SelectCreature(MouseToSpace(event));
+			}
+
+			world->view.moved = cpFalse;
 			world->mouse.leftPressed = cpFalse;
 		}
 		else if (event->mouse_button == SAPP_MOUSEBUTTON_RIGHT)
@@ -248,6 +283,7 @@ static void Event(const sapp_event* event)
 			{
 				/* Move view */
 				world->view.offset = cpvadd(world->view.offset, direction);
+				world->view.moved = cpTrue;
 				world->view.ready = cpFalse;
 			}
 		}
@@ -285,6 +321,7 @@ static void Cleanup(void)
 	Delete(world->creatures);
 	cpfree(world);
 	sg_shutdown();
+
 #ifdef DEBUG
 	printf("Shutdown\n\n");
 #endif

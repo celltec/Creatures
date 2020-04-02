@@ -4,10 +4,10 @@
 #include <stdio.h>
 #endif
 
-#include "free.h"
-#include "utils.h"
-#include "creature.h"
-#include "environment.h"
+#include "../src/free.h"
+#include "../src/utils.h"
+#include "../src/creature.h"
+#include "../src/environment.h"
 #include "test.h"
 
 void TestList(int cases);
@@ -19,11 +19,10 @@ void Test(void)
 	printf("Testing...\n");
 #endif
 
-	TestRandom(100000);
+	TestRandom(10000);
 
 	TestList(1);
 	TestList(100);
-	TestList(10000);
 
 #ifdef DEBUG
 	printf("Successful!\n\n");
