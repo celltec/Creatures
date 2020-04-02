@@ -33,9 +33,10 @@ static void Damage(Creature* this, cpFloat amount)
 	}
 }
 
-static void SeekTarget(Creature* this)
+static cpVect SeekTarget()
 {
-	// todo
+	/* Test target */
+	return randomVector(300000);
 }
 
 // todo: IMPORTANT goes in opposite direction if angle is exactly 180° (bug or feature?)
@@ -58,20 +59,23 @@ void Survive(Creature* this)
 	Move(this);
 	UseEnergy(this);
 
+	// todo: change this to state idle
+	if (cpveql(this->target, cpvzero))
+	{
+		this->target = SeekTarget();
+	}
+
 	/* Target stuff only for testing */
 	if (cpvnear(cpBodyGetPosition(body), this->target, 6.0 + this->size)) // 5 -> size of dot
 	{
 		/* Consume test target */
 		ReplenishEnergy(this, 100.0);
-
-		/* Set a new test target */
-		this->target = randomVector(50000);
 	}
 
 	this->age++;
 }
 
-Creature* Spawn(void)
+Creature* Spawn(const cpVect pos, const cpFloat size)
 {
 	Creature* creature = (Creature*)cpcalloc(1, sizeof(Creature));
 
@@ -86,11 +90,8 @@ Creature* Spawn(void)
 #endif
 
 	/* Some random values for testing */
-	const cpVect pos = randomVector(50000);
 	const cpFloat angle = randomRange(0.0, 2.0 * CP_PI);
-	const cpFloat size = randomRange(1.0, 500.0);
 	const cpFloat mobility = randomRange(50.0, 5000.0);
-	const cpVect target = randomVector(50000);
 	const Color color = randomColor();
 
 	// todo: put in own function
@@ -120,7 +121,6 @@ Creature* Spawn(void)
 	creature->energy = 100.0;
 	creature->health = 100.0;
 	creature->mobility = mobility;
-	creature->target = target;
 	creature->color = color;
 	creature->age = 0;
 

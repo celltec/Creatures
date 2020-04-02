@@ -34,7 +34,7 @@ List* New(void)
 	return (List*)cpcalloc(1, sizeof(List));
 }
 
-void Add(List* list, const void* data)
+void Add(List* list, void* data)
 {
 	/* Allocate one new slot at the end of the list */
 	list->count++;
@@ -44,7 +44,7 @@ void Add(List* list, const void* data)
 	list->list[list->count - 1] = data;
 }
 
-void Remove(List* list, const void* data, free_cb func)
+void Remove(List* list, void* data, free_cb func)
 {
 	for (int i = 0; i < list->count; ++i)
 	{
@@ -57,7 +57,7 @@ void Remove(List* list, const void* data, free_cb func)
 	}
 }
 
-void RemoveAt(List* list, const int index, free_cb func)
+void RemoveAt(List* list, int index, free_cb func)
 {
 	/* Optional callback to free memory */
 	if (func)

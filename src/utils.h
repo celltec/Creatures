@@ -18,9 +18,9 @@ typedef struct {
 typedef void (*free_cb)(void*);
 
 List* New(void);
-void Add(List*, const Creature*);
-void Remove(List*, const Creature*, free_cb);
-void RemoveAt(List*, const int, free_cb);
+void Add(List*, void*);
+void Remove(List*, void*, free_cb);
+void RemoveAt(List*, int, free_cb);
 void RemoveAll(List*, free_cb);
 void Delete(List*);
 
