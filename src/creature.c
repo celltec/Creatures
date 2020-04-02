@@ -14,7 +14,7 @@ static void ChangeMobility(Creature* this, cpFloat value)
 static void UseEnergy(Creature* this)
 {
 	/* Live longer with more health, bigger size and lower mobility	*/
-	this->energy -= this->mobility / this->size / (this->health * 100); /* without the *100 there's very little time */
+	this->energy -= this->mobility / this->size / (this->health * 100);  /* without the *100 there's very little time */
 }
 
 static void ReplenishEnergy(Creature* this, cpFloat amount)
@@ -65,7 +65,7 @@ void Survive(Creature* this)
 		ReplenishEnergy(this, 100.0);
 
 		/* Set a new test target */
-		this->target = randomVector(5000000);
+		this->target = randomVector(50000);
 	}
 
 	this->age++;
@@ -86,11 +86,11 @@ Creature* Spawn(void)
 #endif
 
 	/* Some random values for testing */
-	const cpVect pos = randomVector(5000000);
+	const cpVect pos = randomVector(50000);
 	const cpFloat angle = randomRange(0.0, 2.0 * CP_PI);
-	const cpFloat size = randomRange(1.0, 5000.0);
-	const cpFloat mobility = randomRange(50.0, 10000.0);
-	const cpVect target = randomVector(5000000);
+	const cpFloat size = randomRange(1.0, 500.0);
+	const cpFloat mobility = randomRange(50.0, 5000.0);
+	const cpVect target = randomVector(50000);
 	const Color color = randomColor();
 
 	// todo: put in own function

@@ -12,10 +12,10 @@ Environment* NewEnvironment(void)
 	cpSpaceSetCollisionBias(space, 0.0);  /* Push apart overlapping bodies very fast */
 	
 	environment->space = space;
-	environment->creatures = cpArrayNew(0);
+	environment->creatures = NewList();
 	environment->timeStep = 1.0 / 60.0;  /* For 60 Hz */
 	environment->view.scale = 1.0;
-	environment->view.targetScale = 0.005;
+	environment->view.targetScale = 0.05;
 
 	return environment;
 }
