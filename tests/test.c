@@ -1,5 +1,9 @@
 #include "chipmunk/chipmunk.h"
 
+#ifdef DEBUG
+#include <stdio.h>
+#endif
+
 #include "free.h"
 #include "utils.h"
 #include "creature.h"
@@ -18,6 +22,7 @@ void Test(void)
 	TestRandom(100000);
 
 	TestList(1);
+	TestList(100);
 	TestList(10000);
 
 #ifdef DEBUG
@@ -28,7 +33,8 @@ void Test(void)
 void TestList(int cases)
 {
 	Environment* environment = NewEnvironment();
-	CreatureList* testList = NewList();
+	List* testList = New();
+	Creature* creature;
 
 	for (int i = 0; i < cases; ++i)
 	{
@@ -42,7 +48,8 @@ void TestList(int cases)
 
 	for (int i = 0; i < testList->count; ++i)
 	{
-		cpAssertHard(testList->list[i]->health == 100.0, "failed test");
+		Creature* creature = testList->list[i];
+		cpAssertHard(creature->health == 100.0, "failed test");
 	}
 
 	int someIndex = (int)((float)cases / 2.0);
@@ -55,7 +62,8 @@ void TestList(int cases)
 	cpAssertHard(testCreature->health == 100.0, "failed test");
 
 	Add(testList, testCreature);
-	cpAssertHard(testList->list[testList->count - 1]->health == 100.0, "failed test");
+	creature = testList->list[testList->count - 1];
+	cpAssertHard(creature->health == 100.0, "failed test");
 
 	Remove(testList, testList->list[testList->count - 1], Kill);
 	cpAssertHard(testCreature->health != 100.0, "failed test");
@@ -63,7 +71,30 @@ void TestList(int cases)
 	RemoveAll(testList, NULL);
 	cpAssertHard(testList->count == 0, "failed test");
 
-	FreeList(testList);
+
+	Creature* newCreature1 = Spawn();
+	Creature* newCreature2 = Spawn();
+	cpSpaceAddBody(environment->space, cpShapeGetBody(newCreature2->shape));
+	cpSpaceAddShape(environment->space, newCreature2->shape);
+
+	Add(testList, newCreature1);
+	creature = testList->list[0];
+	cpAssertHard(creature->health == 100.0, "failed test");
+	Add(testList, newCreature2);
+	creature = testList->list[1];
+	cpAssertHard(creature->health == 100.0, "failed test");
+
+	RemoveAt(testList, 1, Kill);
+	cpAssertHard(testList->count == 1, "failed test");
+	cpAssertHard(testList->list != NULL, "failed test");
+	cpAssertHard(newCreature2->health != 100.0, "failed test");
+	RemoveAt(testList, 0, NULL);
+	cpAssertHard(testList->count == 0, "failed test");
+	cpAssertHard(testList->list == NULL, "failed test");
+	cpAssertHard(newCreature1->health == 100.0, "failed test");
+
+
+	Delete(testList);
 	FreeAllChildren(environment->space);
 	cpSpaceFree(environment->space);
 	cpfree(environment);

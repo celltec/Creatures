@@ -6,7 +6,7 @@
 
 typedef struct {
 	cpSpace* space;
-	CreatureList* creatures;
+	List* creatures;
 	cpFloat timeStep;
 	Creature* selectedCreature;
 

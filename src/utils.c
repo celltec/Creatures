@@ -2,11 +2,6 @@
 
 #include "utils.h"
 
-Color randomColor(void)
-{
-	return (Color) { randomRange(0.0, 1.0), randomRange(0.0, 1.0), randomRange(0.0, 1.0), 1.0 };
-}
-
 cpFloat randomRange(cpFloat min, cpFloat max)
 {
 	return min + rand32(rand()) / ((cpFloat)UINT32_MAX / (max - min) + 1);
@@ -15,6 +10,11 @@ cpFloat randomRange(cpFloat min, cpFloat max)
 cpVect randomVector(int maxLenth)
 {
 	return cpvmult(cpvforangle(randomRange(0.0, 2.0 * CP_PI)), rand32(rand()) % maxLenth);
+}
+
+Color randomColor(void)
+{
+	return (Color) { randomRange(0.0, 1.0), randomRange(0.0, 1.0), randomRange(0.0, 1.0), 1.0 };
 }
 
 /* Lehmer random number generator */
@@ -29,72 +29,76 @@ uint32_t rand32(uint32_t seed)
 	return m2;
 }
 
-CreatureList* NewList(void)
+List* New(void)
 {
-	return (CreatureList*)cpcalloc(1, sizeof(CreatureList));
+	return (List*)cpcalloc(1, sizeof(List));
 }
 
-void Add(CreatureList* list, Creature* creature)
+void Add(List* list, const void* data)
 {
+	/* Allocate one new slot at the end of the list */
 	list->count++;
-	list->list = (Creature**)cprealloc(list->list, list->count * sizeof(Creature*));
-	list->list[list->count - 1] = creature;
+	list->list = (void**)cprealloc(list->list, list->count * sizeof(void*));
+
+	/* Put the data in that slot */
+	list->list[list->count - 1] = data;
 }
 
-void Remove(CreatureList* list, Creature* creature, kill_cb kill)
+void Remove(List* list, const void* data, free_cb func)
 {
 	for (int i = 0; i < list->count; ++i)
 	{
-		/* Search for creature */
-		if (list->list[i] == creature)
+		/* Search for data */
+		if (list->list[i] == data)
 		{
-			list->count--;
-
-			/* Move last item to current position */
-			list->list[i] = list->list[list->count];
-
-			/* Optional callback to free memory */
-			if (kill)
-			{
-				kill(creature);
-			}
-
-			/* Remove reference */
-			list->list[list->count] = NULL;
-
-			if (list->count == 0)
-			{
-				/* List is empty */
-				list->list = NULL;
-			}
-			else
-			{
-				/* Reduce allocation */
-				list->list = (Creature**)cprealloc(list->list, list->count * sizeof(Creature*));
-			}
-
-			return;
+			RemoveAt(list, i, func);
+			return;  /* Leave loop early */
 		}
 	}
 }
 
-void RemoveAll(CreatureList* list, kill_cb kill)
+void RemoveAt(List* list, const int index, free_cb func)
 {
-	int count = list->count;
+	/* Optional callback to free memory */
+	if (func)
+	{
+		func(list->list[index]);
+	}
+
+	list->count--;
+
+	if (list->count == 0)
+	{
+		/* List is empty */
+		cpfree(list->list);
+		list->list = NULL;
+		return;
+	}
+
+	/* Override the data with data at the end of the list */
+	list->list[index] = list->list[list->count];
+
+	/* Remove reference to that data at the end */
+	list->list[list->count] = NULL;
+
+	/* Reduce allocation */
+	list->list = (void**)cprealloc(list->list, list->count * sizeof(void*));
+}
+
+void RemoveAll(List* list, free_cb free)
+{
+	const int count = list->count;
 
 	for (int i = 0; i < count; ++i)
 	{
 		/* Always remove the first element */
-		Remove(list, list->list[0], kill);
+		RemoveAt(list, 0, free);
 	}
 }
 
-void FreeList(CreatureList* list)
+void Delete(List* list)
 {
-	if (list)
-	{
-		cpfree(list->list);
-		list->list = NULL;
-		cpfree(list);
-	}
+	if (!list) return;
+	if (list->count > 0) RemoveAll(list, NULL);
+	cpfree(list);
 }

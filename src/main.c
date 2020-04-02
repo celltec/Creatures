@@ -1,5 +1,9 @@
 #include "chipmunk/chipmunk.h"
 
+#ifdef DEBUG
+#include <stdio.h>
+#endif
+
 #define SOKOL_IMPL
 #include "sokol.h"
 #include "test.h"
@@ -62,11 +66,11 @@ static void Init(void)
 	InitGfx();
 	srand((int)stm_now());
 
-	world = NewEnvironment();
-
 #ifdef DEBUG
 	Test();
 #endif
+
+	world = NewEnvironment();
 
 	/* Spawn some creatures for testing */
 	for (int i = 0; i < AMOUNT; ++i)
@@ -278,7 +282,7 @@ static void Cleanup(void)
 {
 	FreeAllChildren(world->space);
 	cpSpaceFree(world->space);
-	FreeList(world->creatures);
+	Delete(world->creatures);
 	cpfree(world);
 	sg_shutdown();
 #ifdef DEBUG
