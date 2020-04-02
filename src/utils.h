@@ -12,15 +12,16 @@ uint32_t rand32(uint32_t seed);
 /* Dynamic array, not a linked list */
 typedef struct {
 	int count;
-	Creature** list;
-} CreatureList;
+	void** list;
+} List;
 
-typedef void (*kill_cb)(Creature*);
+typedef void (*free_cb)(void*);
 
-CreatureList* NewList(void);
-void Add(CreatureList*, Creature*);
-void Remove(CreatureList*, Creature*, kill_cb);
-void RemoveAll(CreatureList*, kill_cb);
-void FreeList(CreatureList*);
+List* New(void);
+void Add(List*, const Creature*);
+void Remove(List*, const Creature*, free_cb);
+void RemoveAt(List*, const int, free_cb);
+void RemoveAll(List*, free_cb);
+void Delete(List*);
 
 #endif /* UTILS_H */
