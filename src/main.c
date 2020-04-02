@@ -10,7 +10,7 @@
 #include "creature.h"
 #include "environment.h"
 
-#define AMOUNT 2500
+#define AMOUNT 500
 
 static Environment* world;
 
@@ -45,17 +45,28 @@ static void NewCreature(void)
 	Creature* creature = Spawn();
 
 	/* Register components */
-	cpArrayPush(world->creatures, creature);
+	Add(world->creatures, creature);
 	cpSpaceAddBody(world->space, cpShapeGetBody(creature->shape));
 	cpSpaceAddShape(world->space, creature->shape);
+#ifdef DEBUG
+	cpVect pos = cpBodyGetPosition(cpShapeGetBody(creature->shape));
+	printf("Spawned a creature:\n pos: (%.0f, %.0f)\n size: %.0f\n mobility: %.0f\n\n", pos.x, pos.y, creature->size, creature->mobility);
+#endif
 }
 
 static void Init(void)
 {
+#ifdef DEBUG
+	printf("Started\n\n");
+#endif
 	InitGfx();
 	srand((int)stm_now());
 
 	world = NewEnvironment();
+
+#ifdef DEBUG
+	Test();
+#endif
 
 	/* Spawn some creatures for testing */
 	for (int i = 0; i < AMOUNT; ++i)
@@ -96,9 +107,9 @@ static void Update(void)
 	TransformScreen(world->view.scale, world->view.offset);
 	world->view.ready = cpTrue;
 
-	for (int i = 0; i < world->creatures->num; ++i)
+	for (int i = 0; i < world->creatures->count; ++i)
 	{
-		Creature* creature = (Creature*)world->creatures->arr[i];
+		Creature* creature = world->creatures->list[i];
 
 		Survive(creature);
 		Draw(creature);
@@ -108,20 +119,22 @@ static void Update(void)
 	}
 
 	/* Check the creatures health separately to avoid changing the list mid-loop */
-	for (int i = 0; i < world->creatures->num; ++i)
+	for (int i = 0; i < world->creatures->count; ++i)
 	{
-		Creature* creature = (Creature*)world->creatures->arr[i];
+		Creature* creature = world->creatures->list[i];
 
 		if (creature->energy < 0.0)
 		{
-			cpArrayDeleteObj(world->creatures, creature);
-
 			if (creature == world->selectedCreature)
 			{
 				world->selectedCreature = NULL;
 			}
 
-			Kill(creature);
+#ifdef DEBUG
+			cpVect pos = cpBodyGetPosition(cpShapeGetBody(creature->shape));
+			printf("Creature dies:\n pos: (%.0f, %.0f)\n size: %.0f\n mobility: %.0f\n\n", pos.x, pos.y, creature->size, creature->mobility);
+#endif
+			Remove(world->creatures, creature, Kill);
 		}
 	}
 
@@ -143,15 +156,17 @@ static void SelectCreature(const cpVect pos)
 	
 	if (!nearest) return;
 
-	Creature* creature;
-
-	for (int i = 0; i < world->creatures->num; ++i)
+	for (int i = 0; i < world->creatures->count; ++i)
 	{
-		creature = (Creature*)world->creatures->arr[i];
+		Creature* creature = world->creatures->list[i];
 
 		if (creature->shape == nearest)
 		{
 			world->selectedCreature = creature;
+#ifdef DEBUG
+			cpVect pos = cpBodyGetPosition(cpShapeGetBody(creature->shape));
+			printf("Select:\n pos: (%.0f, %.0f)\n size: %.0f\n energy: %.0f\n health: %.0f\n mobility: %.0f\n\n", pos.x, pos.y, creature->size, creature->energy, creature->health, creature->mobility);
+#endif
 			break; // todo: scaling
 		}
 	}
@@ -176,7 +191,7 @@ static void Event(const sapp_event* event)
 			break;
 
 		case SAPP_KEYCODE_T:
-			Test(world);
+			Test();
 			break;
 
 		default:
@@ -188,6 +203,9 @@ static void Event(const sapp_event* event)
 	{
 		/* Store mouse coordinates */
 		world->mouse.pos = MouseToSpace(event);
+#ifdef DEBUG
+		printf("Click (%.0f, %.0f)\n\n", world->mouse.pos.x, world->mouse.pos.y);
+#endif
 
 		if (event->mouse_button == SAPP_MOUSEBUTTON_LEFT)
 		{
@@ -234,7 +252,7 @@ static void Event(const sapp_event* event)
 	case SAPP_EVENTTYPE_MOUSE_SCROLL:
 	{
 		/* Some arbitrary scroll limits */
-		static const float min = 0.0005f;  /* Theoretically open to be smaller */
+		static const float min = 0.005f;  /* Theoretically open to be smaller */
 		static const float max = 20.0f;    /* The smallest creature is already big enough at this scale */
 
 		if (world->view.ready)  /* Prevent multiple executions per frame */
@@ -260,6 +278,10 @@ static void Cleanup(void)
 {
 	FreeAllChildren(world->space);
 	cpSpaceFree(world->space);
+	FreeList(world->creatures);
 	cpfree(world);
 	sg_shutdown();
+#ifdef DEBUG
+	printf("Shutdown\n\n");
+#endif
 }

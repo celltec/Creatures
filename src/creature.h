@@ -19,7 +19,7 @@ typedef struct {
 } Creature;
 
 Creature* Spawn(void);
-void Survive(Creature* this);
+void Survive(Creature*);
 void Kill(Creature*);
 void Draw(Creature*);
 

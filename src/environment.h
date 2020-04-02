@@ -1,12 +1,12 @@
 #ifndef ENVIRONMENT_H
 #define ENVIRONMENT_H
 
-#include "chipmunk/chipmunk_private.h"
+#include "utils.h"
 #include "creature.h"
 
 typedef struct {
 	cpSpace* space;
-	cpArray* creatures;
+	CreatureList* creatures;
 	cpFloat timeStep;
 	Creature* selectedCreature;
 
