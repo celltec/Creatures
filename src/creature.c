@@ -39,7 +39,7 @@ static cpVect SeekTarget()
 	return randomVector(300000);
 }
 
-// todo: IMPORTANT goes in opposite direction if angle is exactly 180° (bug or feature?)
+// todo: IMPORTANT goes in opposite direction if angle is exactly 180° (bug or feature?) [maybe make turn speed constant?]
 static void Move(Creature* this)
 {
 	cpBody* body = cpShapeGetBody(this->shape);
@@ -48,31 +48,6 @@ static void Move(Creature* this)
 	const cpFloat precision = cpfmin(cpfsqrt(cpvlength(target)) * 0.5 / cpfabs(cpvtoangle(target)), 10);  /* Handcrafted magic factor */
 	cpBodyApplyForceAtLocalPoint(body, cpv(precision * this->mobility  * this->size, 0.0), cpBodyGetCenterOfGravity(body));
 	cpBodySetTorque(body, cpvtoangle(target) * this->mobility * cpfpow(this->size, 2.1));  /* Handcrafted magic factor */
-}
-
-void Survive(Creature* this)
-{
-	cpBody* body = cpShapeGetBody(this->shape);
-
-	// todo: only if food was seen and is big enough or something
-	SeekTarget(this);
-	Move(this);
-	UseEnergy(this);
-
-	// todo: change this to state idle
-	if (cpveql(this->target, cpvzero))
-	{
-		this->target = SeekTarget();
-	}
-
-	/* Target stuff only for testing */
-	if (cpvnear(cpBodyGetPosition(body), this->target, 6.0 + this->size)) // 5 -> size of dot
-	{
-		/* Consume test target */
-		ReplenishEnergy(this, 100.0);
-	}
-
-	this->age++;
 }
 
 Creature* Spawn(const cpVect pos, const cpFloat size)
@@ -125,6 +100,31 @@ Creature* Spawn(const cpVect pos, const cpFloat size)
 	creature->age = 0;
 
 	return creature;
+}
+
+void Survive(Creature* this)
+{
+	cpBody* body = cpShapeGetBody(this->shape);
+
+	// todo: only if food was seen and is big enough or something
+	SeekTarget(this);
+	Move(this);
+	UseEnergy(this);
+
+	// todo: change this to state idle
+	if (cpveql(this->target, cpvzero))
+	{
+		this->target = SeekTarget();
+	}
+
+	/* Target stuff only for testing */
+	if (cpvnear(cpBodyGetPosition(body), this->target, 6.0 + this->size)) // 5 -> size of dot
+	{
+		/* Consume test target */
+		ReplenishEnergy(this, 100.0);
+	}
+
+	this->age++;
 }
 
 void Kill(Creature* this)
