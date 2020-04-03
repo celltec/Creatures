@@ -14,7 +14,16 @@ cpVect randomVector(int maxLenth)
 
 Color randomColor(void)
 {
-	return (Color) { randomRange(0.0, 1.0), randomRange(0.0, 1.0), randomRange(0.0, 1.0), 1.0 };
+	/* Exclude boundary values to prevent pure blacks and whites */
+	const float saturation = 0.5;
+	const float variation = 0.3;
+
+	return (Color) {
+		saturation + randomRange(-variation, variation),
+		saturation + randomRange(-variation, variation),
+		saturation + randomRange(-variation, variation), 
+		1.0
+	};
 }
 
 /* Lehmer random number generator */

@@ -2,7 +2,6 @@
 #define UTILS_H
 
 #include "color.h"
-#include "creature.h"
 
 Color randomColor(void);
 cpFloat randomRange(cpFloat min, cpFloat max);

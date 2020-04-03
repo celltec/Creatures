@@ -249,7 +249,7 @@ static void Event(const sapp_event* event)
 		{
 			world->mouse.rightPressed = cpTrue;
 
-			/* Stop creature for testing */
+			/* For testing */
 			if(world->selectedCreature)
 				world->selectedCreature->mobility = 0;
 		}
