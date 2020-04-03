@@ -27,5 +27,6 @@ typedef struct {
 } Environment;
 
 Environment* NewEnvironment(void);
+void InitEnvironment(Environment*);
 
 #endif /* ENVIRONMENT_H */

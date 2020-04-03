@@ -32,7 +32,8 @@ void Test(void)
 void TestList(int cases)
 {
 	Environment* environment = NewEnvironment();
-	List* testList = New();
+	InitEnvironment(environment);
+	List* testList = NewList();
 	Creature* creature;
 
 	for (int i = 0; i < cases; ++i)

@@ -38,7 +38,7 @@ uint32_t rand32(uint32_t seed)
 	return m2;
 }
 
-List* New(void)
+List* NewList(void)
 {
 	return (List*)cpcalloc(1, sizeof(List));
 }
