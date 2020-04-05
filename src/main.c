@@ -15,15 +15,16 @@
 #include "creature.h"
 #include "environment.h"
 
-#define AMOUNT 1000
+#define AMOUNT 10
 
 static void Init(Environment*);
 static void Update(Environment*);
 static void Cleanup(Environment*);
 
-int main(void)
+int main(int argc, char* argv[])
 {
 	stm_setup();
+	sargs_setup(&(sargs_desc) { argc, argv });
 
 	sapp_desc app = {
 		.user_data = NewEnvironment(),
@@ -36,7 +37,7 @@ int main(void)
 		.fullscreen = cpFalse,
 		.high_dpi = cpTrue,
 		.sample_count = 4,  /* MSAA */
-		.window_title = "Creatures",
+		.window_title = "Creatures"
 	};
 
 	return sapp_run(&app);
@@ -45,8 +46,8 @@ int main(void)
 static void CreateCreature(Environment* world)
 {
 	/* Some random values for testing */
-	const cpVect pos = randomVector(300000);
-	const cpFloat size = randomRange(10.0, 1000.0);
+	const cpVect pos = randomVector(300);
+	const cpFloat size = randomRange(5.0, 20.0);
 
 	/* Create instance */
 	Creature* creature = Spawn(pos, size);
@@ -63,8 +64,6 @@ static void CreateCreature(Environment* world)
 
 static void Init(Environment* world)
 {
-	srand((int)stm_now());
-
 #ifdef DEBUG
 	printf("Started\n\n");
 	Test();
@@ -177,6 +176,7 @@ static void Cleanup(Environment* world)
 	cpSpaceFree(world->space);
 	Delete(world->creatures);
 	cpfree(world);
+	sargs_shutdown();
 	sg_shutdown();
 
 #ifdef DEBUG
