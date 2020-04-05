@@ -97,7 +97,6 @@ Creature* Spawn(const cpVect pos, const cpFloat size)
 	creature->health = 100.0;
 	creature->mobility = mobility;
 	creature->color = color;
-	creature->age = 0;
 
 	return creature;
 }
