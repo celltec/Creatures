@@ -2,6 +2,7 @@
 #define SHADER_H
 
 #include "sokol.h"
+#include "color.h"
 #include "HandmadeMath.h"
 
 #if defined(SOKOL_GLCORE33)
@@ -18,5 +19,6 @@
 
 void InitGfx(void);
 void ConstructFrame(void);
+void DrawPolygon(int corners, const hmm_vec2* vertices, Color color);
 
 #endif /* SHADER_H */

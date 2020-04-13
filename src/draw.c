@@ -25,5 +25,5 @@ void DrawShape(cpShape* shape, Color color)
 		vertices[i].Y = (float)planes[i].v0.y;
 	}
 
-	//DrawPolygon(corners, vertices, color);
+	DrawPolygon(corners, vertices, color);
 }

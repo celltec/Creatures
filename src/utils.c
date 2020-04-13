@@ -1,5 +1,3 @@
-#include "chipmunk/chipmunk.h"
-
 #include "utils.h"
 
 cpFloat randomRange(cpFloat min, cpFloat max)
