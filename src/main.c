@@ -15,7 +15,7 @@
 #include "creature.h"
 #include "environment.h"
 
-#define AMOUNT 1000
+#define AMOUNT 10
 
 static void Init(Environment*);
 static void Update(Environment*);
@@ -46,8 +46,8 @@ int main(int argc, char* argv[])
 static void CreateCreature(Environment* world)
 {
 	/* Some random values for testing */
-	const cpVect pos = randomVector(300000);
-	const cpFloat size = randomRange(10.0, 1000.0);
+	const cpVect pos = randomVector(300);
+	const cpFloat size = randomRange(5.0, 20.0);
 
 	/* Create instance */
 	Creature* creature = Spawn(pos, size);

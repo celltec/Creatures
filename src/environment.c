@@ -30,6 +30,6 @@ void InitEnvironment(Environment* environment)
 	environment->space = space;
 	environment->creatures = NewList();
 	environment->timeStep = 1.0 / 60.0;    /* For 60 Hz */
-	environment->view.scale = 0.5;
-	environment->view.targetScale = 0.05;  /* Zoom out in the beginning */
+	environment->view.scale = 0.01;
+	environment->view.targetScale = 1.0;  /* Zoom in the beginning */
 }
