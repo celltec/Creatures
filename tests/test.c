@@ -102,12 +102,12 @@ void TestList(int cases)
 
 void TestRandom(int cases)
 {
-	const cpFloat min = -1;
-	const cpFloat max = 1;
+	const float min = -1;
+	const float max = 1;
 
 	for (int i = 0; i < cases; ++i)
 	{
-		cpFloat res = randomRange(min, max);
+		float res = randomRange(min, max);
 		cpAssertHard(res >= min && res <= max, "failed test");
 	}
 }

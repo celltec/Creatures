@@ -78,7 +78,7 @@ void InitGfx(void)
 
 void ConstructFrame(void)
 {
-	hmm_vec3 scale = { 0.01f, 0.01f, 1.0f };
+	hmm_vec3 scale = { 0.005f, 0.005f, 1.0f };
 	hmm_vec3 offset = { 5.0f, 5.0f, 0.0f };
 
 	/* Prepare view matrix */

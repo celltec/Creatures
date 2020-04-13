@@ -1,27 +1,13 @@
 #include "utils.h"
 
-cpFloat randomRange(cpFloat min, cpFloat max)
+float randomRange(float min, float max)
 {
-	return min + rand32(rand()) / ((cpFloat)UINT32_MAX / (max - min) + 1);
+	return min + rand32(rand()) / (UINT32_MAX / (max - min) + 1);
 }
 
 cpVect randomVector(int maxLenth)
 {
 	return cpvmult(cpvforangle(randomRange(0.0, 2.0 * CP_PI)), rand32(rand()) % maxLenth);
-}
-
-Color randomColor(void)
-{
-	/* Exclude boundary values to prevent pure blacks and whites */
-	const float saturation = 0.5;
-	const float variation = 0.3;
-
-	return (Color) {
-		saturation + randomRange(-variation, variation),
-		saturation + randomRange(-variation, variation),
-		saturation + randomRange(-variation, variation), 
-		1.0
-	};
 }
 
 /* Lehmer random number generator */
