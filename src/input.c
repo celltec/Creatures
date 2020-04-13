@@ -1,14 +1,11 @@
-#include "chipmunk/chipmunk.h"
-
 #ifdef DEBUG
 #include <stdio.h>
 #endif
 
-#include "sokol.h"
-#include "input.h"
+#include "chipmunk/chipmunk.h"
+#include "sokol.h" // todo: include only sokol_app.h
 #include "creature.h"
-
-extern cpTransform ChipmunkDebugDrawVPMatrix;
+#include "input.h"
 
 static cpVect MouseToSpace(const sapp_event*);
 static void SelectCreature(Environment*, const cpVect);
@@ -119,10 +116,11 @@ void Event(const sapp_event* event, Environment* world)
 static cpVect MouseToSpace(const sapp_event* event)  // todo: put in environment? VPMatrix should also be there
 {
 	/* Calculate clip coordinates for mouse */
-	cpVect unitVect = cpv(2.0 * event->mouse_x / sapp_width() - 1.0, 1.0 - 2.0 * event->mouse_y / sapp_height());
+	//cpVect unitVect = cpv(2.0 * event->mouse_x / sapp_width() - 1.0, 1.0 - 2.0 * event->mouse_y / sapp_height());
 
 	/* Use the VP matrix to transform to world space */
-	return cpTransformPoint(cpTransformInverse(ChipmunkDebugDrawVPMatrix), unitVect);
+	//return cpTransformPoint(cpTransformInverse(VPMatrix), unitVect);
+	return cpvzero; // todo: rewrite with vs_params.mvp for shader change
 }
 
 static void SelectCreature(Environment* world, const cpVect pos)

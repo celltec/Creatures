@@ -1,11 +1,13 @@
-#include "chipmunk/chipmunk.h"
+#define HANDMADE_MATH_IMPLEMENTATION
+#define HANDMADE_MATH_NO_SSE
+#define SOKOL_IMPL
 
 #ifdef DEBUG
 #include <stdio.h>
 #include "../tests/test.h"
 #endif
 
-#define SOKOL_IMPL
+#include "chipmunk/chipmunk.h"
 #include "sokol.h"
 #include "free.h"
 #include "draw.h"
@@ -132,15 +134,12 @@ static void Update(Environment* world)
 	SmoothScaling(world);
 	SmoothTranslate(world);
 
-	TransformScreen(world->view.scale, world->view.offset);
-	world->view.ready = cpTrue;
-
 	for (int i = 0; i < world->creatures->count; ++i)
 	{
 		Creature* creature = world->creatures->list[i];
 
 		Survive(creature);
-		Draw(creature);
+		Display(creature);
 
 		/* For testing */
 		//DrawDot(creature->target, 10.0, black);
@@ -167,7 +166,9 @@ static void Update(Environment* world)
 		}
 	}
 
-	FlushScreen();
+	//ConstructFrame(world->view.scale, world->view.offset);
+	ConstructFrame();
+	world->view.ready = cpTrue;
 }
 
 static void Cleanup(Environment* world)

@@ -124,6 +124,11 @@ void Survive(Creature* this)
 	}
 }
 
+void Display(Creature* this)
+{
+	DrawShape(this->shape, this->color);
+}
+
 void Kill(Creature* this)
 {
 	cpSpace* space = cpShapeGetSpace(this->shape);
@@ -136,9 +141,4 @@ void Kill(Creature* this)
 	cpBodyFree(body);
 
 	cpfree(this);
-}
-
-void Draw(Creature* this)
-{
-	DrawPolygon(this->shape, this->color);
 }
