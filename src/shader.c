@@ -79,19 +79,26 @@ void InitGfx(void)
 	};
 }
 
-void ConstructFrame(void)
+void ConstructFrame(float scale, float x, float y)
 {
-	hmm_vec3 scale = { 0.005f, 0.005f, 1.0f };
-	hmm_vec3 offset = { 5.0f, 5.0f, 0.0f };
+	int width = sapp_width();
+	int height = sapp_height();
+	
+	/* Half width and height to get center */
+	float hw = (float)(width >> 1);
+	float hh = (float)(height >> 1);
 
-	/* Prepare view matrix */
+	hmm_mat4 worldMatrix = HMM_Orthographic(-hw, hw, -hh, hh, 0.0f, 1.0f);
+	hmm_mat4 viewMatrix = HMM_MultiplyMat4(HMM_Scale(HMM_Vec3(scale, scale, 1.0f)), worldMatrix);
+	hmm_mat4 projectionMatrix = HMM_Translate(HMM_Vec3(x, y, 0.0f));
+
 	vs_params_t vs_params;
-	vs_params.mvp = HMM_MultiplyMat4(HMM_Scale(scale), HMM_Translate(offset));
+	vs_params.mvp = HMM_MultiplyMat4(viewMatrix, projectionMatrix);
 
 	sg_update_buffer(vBufId, vertexBuffer, vertexCount * sizeof(Vertex));
 	sg_update_buffer(iBufId, indexBuffer, indexCount * sizeof(uint16_t));
 
-	sg_begin_default_pass(&state.action, sapp_width(), sapp_height());
+	sg_begin_default_pass(&state.action, width, height);
 	sg_apply_pipeline(state.pipe);
 	sg_apply_bindings(&state.bind);
 	sg_apply_uniforms(SG_SHADERSTAGE_VS, SLOT_vs_params, &vs_params, sizeof(vs_params));
@@ -169,9 +176,9 @@ void DrawPolygon(int corners, const hmm_vec2* vertices, float size, Color color)
 		hmm_vec2 of = HMM_MultiplyVec2f(HMM_AddVec2(n1, n2), 1.0f / (HMM_DotVec2(n1, n2) + 1.0f));
 		hmm_vec2 v = HMM_AddVec2(v0, HMM_MultiplyVec2f(of, inset));
 
-		vBuf[4 * i + 0] = (Vertex){ {(float)v.X, (float)v.Y}, {0.0f, 0.0f}, 0.0f, color, black };
-		vBuf[4 * i + 1] = (Vertex){ {(float)v.X, (float)v.Y}, {(float)n1.X, (float)n1.Y}, radius, color, black };
-		vBuf[4 * i + 2] = (Vertex){ {(float)v.X, (float)v.Y}, {(float)of.X, (float)of.Y}, radius, color, black };
-		vBuf[4 * i + 3] = (Vertex){ {(float)v.X, (float)v.Y}, {(float)n2.X, (float)n2.Y}, radius, color, black };
+		vBuf[4 * i + 0] = (Vertex){ {(float)v.X, (float)v.Y}, {0.0f, 0.0f}, 0.0f, color, color };
+		vBuf[4 * i + 1] = (Vertex){ {(float)v.X, (float)v.Y}, {(float)n1.X, (float)n1.Y}, radius, color, color };
+		vBuf[4 * i + 2] = (Vertex){ {(float)v.X, (float)v.Y}, {(float)of.X, (float)of.Y}, radius, color, color };
+		vBuf[4 * i + 3] = (Vertex){ {(float)v.X, (float)v.Y}, {(float)n2.X, (float)n2.Y}, radius, color, color };
 	}
 }

@@ -166,8 +166,7 @@ static void Update(Environment* world)
 		}
 	}
 
-	//ConstructFrame(world->view.scale, world->view.offset);
-	ConstructFrame();
+	ConstructFrame(world->view.scale, world->view.offset.x, world->view.offset.y);
 	world->view.ready = cpTrue;
 }
 
