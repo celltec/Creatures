@@ -8,8 +8,10 @@ void DrawShape(cpShape* shape, Color color)
 	/* Cast to poly shape */
 	cpPolyShape* poly = (cpPolyShape*)shape;
 
-	/* Get planes */
+	float size = poly->r;
 	int corners = poly->count;
+
+	/* Get planes */
 	struct cpSplittingPlane* planes = poly->planes;
 
 #if (__STDC_VERSION__ == 199901L)
@@ -25,5 +27,5 @@ void DrawShape(cpShape* shape, Color color)
 		vertices[i].Y = (float)planes[i].v0.y;
 	}
 
-	DrawPolygon(corners, vertices, color);
+	DrawPolygon(corners, vertices, size, color);
 }

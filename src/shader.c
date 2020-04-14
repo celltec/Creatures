@@ -7,7 +7,7 @@
 // todo: check these numbers, they are probably not the most efficient
 // todo: dynamic allocation possible?
 
-typedef struct { hmm_vec2 pos; Color color; } Vertex;
+typedef struct { hmm_vec2 pos, uv; float radius; Color fill, outline; } Vertex;
 
 static sg_buffer vBufId, iBufId;
 static uint16_t vertexCount, indexCount;
@@ -58,8 +58,11 @@ void InitGfx(void)
 		.index_type = SG_INDEXTYPE_UINT16,
 		.layout = {
 			.attrs = {
-				[ATTR_vs_position].format = SG_VERTEXFORMAT_FLOAT2,
-				[ATTR_vs_color].format = SG_VERTEXFORMAT_FLOAT4
+				[ATTR_vs_IN_pos].format = SG_VERTEXFORMAT_FLOAT2,
+				[ATTR_vs_IN_uv].format = SG_VERTEXFORMAT_FLOAT2,
+				[ATTR_vs_IN_radius].format = SG_VERTEXFORMAT_FLOAT,
+				[ATTR_vs_IN_fill].format = SG_VERTEXFORMAT_FLOAT4,
+				[ATTR_vs_IN_outline].format = SG_VERTEXFORMAT_FLOAT4
 			}
 		}
 	});
@@ -116,10 +119,11 @@ static Vertex* push_vertexes(size_t vcount, const uint16_t* index_src, size_t ic
 	return vertex_dst;
 }
 
-void DrawPolygon(int corners, const hmm_vec2* vertices, Color color)
+void DrawPolygon(int corners, const hmm_vec2* vertices, float size, Color color)
 {
 	uint16_t indices[666]; // todo: make dynamic
 
+	/* Fill triangles */
 	for (int i = 0; i < corners - 2; i++)
 	{
 		indices[3 * i + 0] = 0;
@@ -127,13 +131,47 @@ void DrawPolygon(int corners, const hmm_vec2* vertices, Color color)
 		indices[3 * i + 2] = 4 * (i + 2);
 	}
 
-	Vertex* curBufPos = push_vertexes(4 * corners, indices, 3 * (5 * corners - 2));
-
-	for (int i = 0; i < corners; i++)
+	/* Outline triangles */
+	uint16_t* cursor = indices + 3 * (corners - 2);
+	for (int i0 = 0; i0 < corners; i0++)
 	{
-		curBufPos[4 * i + 0] = (Vertex){ vertices[i], color };
-		curBufPos[4 * i + 1] = (Vertex){ vertices[i], color };
-		curBufPos[4 * i + 2] = (Vertex){ vertices[i], color };
-		curBufPos[4 * i + 3] = (Vertex){ vertices[i], color };
+		int i1 = (i0 + 1) % corners;
+		cursor[12 * i0 + 0] = 4 * i0 + 0;
+		cursor[12 * i0 + 1] = 4 * i0 + 1;
+		cursor[12 * i0 + 2] = 4 * i0 + 2;
+		cursor[12 * i0 + 3] = 4 * i0 + 0;
+		cursor[12 * i0 + 4] = 4 * i0 + 2;
+		cursor[12 * i0 + 5] = 4 * i0 + 3;
+		cursor[12 * i0 + 6] = 4 * i0 + 0;
+		cursor[12 * i0 + 7] = 4 * i0 + 3;
+		cursor[12 * i0 + 8] = 4 * i1 + 0;
+		cursor[12 * i0 + 9] = 4 * i0 + 3;
+		cursor[12 * i0 + 10] = 4 * i1 + 0;
+		cursor[12 * i0 + 11] = 4 * i1 + 1;
+	}
+
+	float inset = (float)-cpfmax(0, 2 * 1.0 - size);
+	float outset = (float)size + 1.0;
+	float radius = outset - inset;
+
+	Vertex* vBuf = push_vertexes(4 * corners, indices, 3 * (5 * corners - 2));
+	for (int i = 0; i < corners; i++) {
+		hmm_vec2 v0 = vertices[i];
+		hmm_vec2 vPrev = vertices[(i + (corners - 1)) % corners];
+		hmm_vec2 vNext = vertices[(i + (corners + 1)) % corners];
+		
+		hmm_vec2 n1 = HMM_SubtractVec2(v0, vPrev);
+		n1 = HMM_NormalizeVec2(HMM_Vec2(n1.Y, -n1.X));
+
+		hmm_vec2 n2 = HMM_SubtractVec2(vNext, v0);
+		n2 = HMM_NormalizeVec2(HMM_Vec2(n2.Y, -n2.X));
+
+		hmm_vec2 of = HMM_MultiplyVec2f(HMM_AddVec2(n1, n2), 1.0f / (HMM_DotVec2(n1, n2) + 1.0f));
+		hmm_vec2 v = HMM_AddVec2(v0, HMM_MultiplyVec2f(of, inset));
+
+		vBuf[4 * i + 0] = (Vertex){ {(float)v.X, (float)v.Y}, {0.0f, 0.0f}, 0.0f, color, black };
+		vBuf[4 * i + 1] = (Vertex){ {(float)v.X, (float)v.Y}, {(float)n1.X, (float)n1.Y}, radius, color, black };
+		vBuf[4 * i + 2] = (Vertex){ {(float)v.X, (float)v.Y}, {(float)of.X, (float)of.Y}, radius, color, black };
+		vBuf[4 * i + 3] = (Vertex){ {(float)v.X, (float)v.Y}, {(float)n2.X, (float)n2.Y}, radius, color, black };
 	}
 }
