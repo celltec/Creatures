@@ -49,7 +49,7 @@ static void CreateCreature(Environment* world)
 {
 	/* Some random values for testing */
 	const cpVect pos = randomVector(300);
-	const cpFloat size = randomRange(5.0, 20.0);
+	const cpFloat size = randomRange(1.0, 50.0);
 
 	/* Create instance */
 	Creature* creature = Spawn(pos, size);
@@ -140,9 +140,14 @@ static void Update(Environment* world)
 
 		Survive(creature);
 		Display(creature);
+	}
 
-		/* For testing */
-		//DrawDot(creature->target, 10.0, black);
+	/* For testing */
+	for (int i = 0; i < world->creatures->count; ++i)
+	{
+		Creature* creature = world->creatures->list[i];
+		DrawLine(creature->target, cpvzero, 2.0, green);
+		DrawDot(creature->target, 2.0, green);
 	}
 
 	/* Check the creatures health separately to avoid changing the list mid-loop */
