@@ -173,7 +173,7 @@ static void Update(Environment* world)
 		}
 	}
 
-	ConstructFrame(&world->view->matrix, world->view->scale, world->view->offset);
+	ConstructFrame(&world->view->transform, world->view->scale, world->view->offset);
 	world->view->ready = cpTrue;
 }
 

@@ -5,7 +5,7 @@
 #include "creature.h"
 
 typedef struct {
-	cpTransform matrix;
+	cpTransform transform;
 	cpVect offset;
 	cpVect targetOffset;
 	cpFloat scale;

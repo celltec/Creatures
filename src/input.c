@@ -120,7 +120,7 @@ static cpVect MouseToSpace(Environment* world, const sapp_event* event)
 	cpVect unitVect = cpv(2.0 * event->mouse_x / sapp_width() - 1.0, 1.0 - 2.0 * event->mouse_y / sapp_height());
 
 	/* Use the VP matrix to transform to world space */
-	return cpTransformPoint(cpTransformInverse(world->view->matrix), unitVect);
+	return cpTransformPoint(cpTransformInverse(world->view->transform), unitVect);
 }
 
 static void SelectCreature(Environment* world, const cpVect pos)

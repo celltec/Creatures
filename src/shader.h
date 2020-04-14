@@ -3,7 +3,10 @@
 
 #include "sokol.h"
 #include "color.h"
-#include "Handmade-Math/HandmadeMath.h"
+
+typedef struct {
+	float vpMatrix[16];
+} Uniform;
 
 #if defined(SOKOL_GLCORE33)
 #include "../glsl/glcore330.h"
