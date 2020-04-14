@@ -1,4 +1,3 @@
-  
 @ctype mat4 hmm_mat4
 
 @vs vs
@@ -6,24 +5,50 @@ uniform vs_params {
     mat4 mvp;
 };
 
-in vec4 position;
-in vec4 color;
-out vec4 vert_color;
+struct s_frag {
+    vec2 uv;
+    vec4 fill;
+    vec4 outline;
+};
 
-void main()
-{
-    gl_Position = mvp * position;
-    vert_color = color;
+in vec2 IN_pos;
+in vec2 IN_uv;
+in float IN_radius;
+in vec4 IN_fill;
+in vec4 IN_outline;
+
+out s_frag FRAG;
+
+void main(){
+    gl_Position = mvp * vec4(IN_pos + IN_radius * IN_uv, 0, 1);
+    FRAG.uv = IN_uv;
+    FRAG.fill = IN_fill;
+    FRAG.fill.rgb *= IN_fill.a;
+    FRAG.outline = IN_outline;
+    FRAG.outline.a *= IN_outline.a;
 }
 @end
 
 @fs fs
-in vec4 vert_color;
-out vec4 frag_color;
+struct s_frag {
+    vec2 uv;
+    vec4 fill;
+    vec4 outline;
+};
 
-void main()
-{
-    frag_color = vert_color;
+in s_frag FRAG;
+
+out vec4 OUT_color;
+
+void main(){
+    float len = length(FRAG.uv);
+    float fw = length(fwidth(FRAG.uv));
+    float mask = smoothstep(-1, fw - 1, -len);
+
+    float outline = 1 - fw;
+    float outline_mask = smoothstep(outline - fw, outline, len);
+    vec4 color = FRAG.fill + (FRAG.outline - FRAG.fill * FRAG.outline.a) * outline_mask;
+    OUT_color = color * mask;
 }
 @end
 
