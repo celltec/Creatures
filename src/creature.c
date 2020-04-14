@@ -33,7 +33,7 @@ static void Damage(Creature* this, cpFloat amount)
 	}
 }
 
-static cpVect SeekTarget()
+static cpVect SeekTarget(void)
 {
 	/* Test target */
 	return randomVector(300);
@@ -65,8 +65,8 @@ Creature* Spawn(const cpVect pos, const cpFloat size)
 #endif
 
 	/* Some random values for testing */
-	const cpFloat angle = randomRange(0.0, 2.0 * CP_PI);
-	const cpFloat mobility = randomRange(50.0, 500.0);
+	const cpFloat angle = randomRange(0, 2 * CP_PI);
+	const cpFloat mobility = randomRange(50, 500);
 	const Color color = randomColor();
 
 	// todo: put in own function
@@ -74,7 +74,7 @@ Creature* Spawn(const cpVect pos, const cpFloat size)
 	{
 		/* For testing (to look better) */
 		cpFloat length = size;
-		if (i == corners / 2)
+		if (i == corners / 2.0)
 			length *= 2.5;
 
 		/* Calculate vertecies for polygon */
@@ -105,8 +105,7 @@ void Survive(Creature* this)
 {
 	cpBody* body = cpShapeGetBody(this->shape);
 
-	// todo: only if food was seen and is big enough or something
-	SeekTarget(this);
+	// todo: seek target if food was seen and is big enough or something
 	Move(this);
 	UseEnergy(this);
 
@@ -121,6 +120,7 @@ void Survive(Creature* this)
 	{
 		/* Consume test target */
 		ReplenishEnergy(this, 100.0);
+		this->target = SeekTarget();
 	}
 }
 

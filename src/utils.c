@@ -2,12 +2,12 @@
 
 float randomRange(float min, float max)
 {
-	return min + rand32(rand()) / (UINT32_MAX / (max - min) + 1);
+	return min + rand32(rand()) / (UINT32_MAX / (max - min) + 1.0f);
 }
 
 cpVect randomVector(int maxLenth)
 {
-	return cpvmult(cpvforangle(randomRange(0.0, 2.0 * CP_PI)), rand32(rand()) % maxLenth);
+	return cpvmult(cpvforangle(randomRange(0.0f, 2.0f * CP_PI)), rand32(rand()) % maxLenth);
 }
 
 /* Lehmer random number generator */

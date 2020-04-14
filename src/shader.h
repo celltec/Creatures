@@ -3,7 +3,7 @@
 
 #include "sokol.h"
 #include "color.h"
-#include "HandmadeMath.h"
+#include "Handmade-Math/HandmadeMath.h"
 
 #if defined(SOKOL_GLCORE33)
 #include "../glsl/glcore330.h"

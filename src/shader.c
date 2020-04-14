@@ -60,6 +60,11 @@ void InitGfx(void)
 		.label = "pipeline",
 		.shader = shader,
 		.index_type = SG_INDEXTYPE_UINT16,
+		.blend = {
+			.enabled = true,
+			.src_factor_rgb = SG_BLENDFACTOR_ONE,
+			.dst_factor_rgb = SG_BLENDFACTOR_ONE_MINUS_SRC_ALPHA
+		},
 		.layout = {
 			.attrs = {
 				[ATTR_vs_IN_pos].format = SG_VERTEXFORMAT_FLOAT2,
@@ -141,10 +146,10 @@ void DrawDot(cpVect pos, cpFloat size, Color color)
 {
 	float r = (float)(size * 0.5f);
 	Vertex* vertexes = push_vertexes(4, (uint16_t[]) { 0, 1, 2, 0, 2, 3 }, 6);
-	vertexes[0] = (Vertex){ {(float)pos.x, (float)pos.y}, {-1, -1}, r, color, blue };
-	vertexes[1] = (Vertex){ {(float)pos.x, (float)pos.y}, {-1,  1}, r, color, blue };
-	vertexes[2] = (Vertex){ {(float)pos.x, (float)pos.y}, { 1,  1}, r, color, blue };
-	vertexes[3] = (Vertex){ {(float)pos.x, (float)pos.y}, { 1, -1}, r, color, blue };
+	vertexes[0] = (Vertex){ {(float)pos.x, (float)pos.y}, {-1, -1}, r, color, black };
+	vertexes[1] = (Vertex){ {(float)pos.x, (float)pos.y}, {-1,  1}, r, color, black };
+	vertexes[2] = (Vertex){ {(float)pos.x, (float)pos.y}, { 1,  1}, r, color, black };
+	vertexes[3] = (Vertex){ {(float)pos.x, (float)pos.y}, { 1, -1}, r, color, black };
 }
 
 void DrawLine(cpVect a, cpVect b, cpFloat radius, Color color)
@@ -155,14 +160,14 @@ void DrawLine(cpVect a, cpVect b, cpFloat radius, Color color)
 	cpVect t = cpvnormalize(cpvsub(b, a));
 	float r = (float)radius;
 
-	vertexes[0] = (Vertex){ {(float)a.x, (float)a.y}, {(float)(-t.x + t.y), (float)(-t.x - t.y)}, r, color, red };
-	vertexes[1] = (Vertex){ {(float)a.x, (float)a.y}, {(float)(-t.x - t.y), (float)(+t.x - t.y)}, r, color, red };
-	vertexes[2] = (Vertex){ {(float)a.x, (float)a.y}, {(float)(-0.0 + t.y), (float)(-t.x + 0.0)}, r, color, red };
-	vertexes[3] = (Vertex){ {(float)a.x, (float)a.y}, {(float)(-0.0 - t.y), (float)(+t.x + 0.0)}, r, color, red };
-	vertexes[4] = (Vertex){ {(float)b.x, (float)b.y}, {(float)(+0.0 + t.y), (float)(-t.x - 0.0)}, r, color, red };
-	vertexes[5] = (Vertex){ {(float)b.x, (float)b.y}, {(float)(+0.0 - t.y), (float)(+t.x - 0.0)}, r, color, red };
-	vertexes[6] = (Vertex){ {(float)b.x, (float)b.y}, {(float)(+t.x + t.y), (float)(-t.x + t.y)}, r, color, red };
-	vertexes[7] = (Vertex){ {(float)b.x, (float)b.y}, {(float)(+t.x - t.y), (float)(+t.x + t.y)}, r, color, red };
+	vertexes[0] = (Vertex){ {(float)a.x, (float)a.y}, {(float)(-t.x + t.y), (float)(-t.x - t.y)}, r, color, black };
+	vertexes[1] = (Vertex){ {(float)a.x, (float)a.y}, {(float)(-t.x - t.y), (float)(+t.x - t.y)}, r, color, black };
+	vertexes[2] = (Vertex){ {(float)a.x, (float)a.y}, {(float)(-0.0 + t.y), (float)(-t.x + 0.0)}, r, color, black };
+	vertexes[3] = (Vertex){ {(float)a.x, (float)a.y}, {(float)(-0.0 - t.y), (float)(+t.x + 0.0)}, r, color, black };
+	vertexes[4] = (Vertex){ {(float)b.x, (float)b.y}, {(float)(+0.0 + t.y), (float)(-t.x - 0.0)}, r, color, black };
+	vertexes[5] = (Vertex){ {(float)b.x, (float)b.y}, {(float)(+0.0 - t.y), (float)(+t.x - 0.0)}, r, color, black };
+	vertexes[6] = (Vertex){ {(float)b.x, (float)b.y}, {(float)(+t.x + t.y), (float)(-t.x + t.y)}, r, color, black };
+	vertexes[7] = (Vertex){ {(float)b.x, (float)b.y}, {(float)(+t.x - t.y), (float)(+t.x + t.y)}, r, color, black };
 }
 
 void DrawPolygon(int corners, const cpVect* vertices, cpFloat size, Color color)
@@ -215,9 +220,9 @@ void DrawPolygon(int corners, const cpVect* vertices, cpFloat size, Color color)
 
 		Point pos = { v.x, v.y };
 
-		vBuf[4 * i + 0] = (Vertex){ pos, {0.0f, 0.0f}, 0.0f, color, red };
-		vBuf[4 * i + 1] = (Vertex){ pos, {(float)n1.x, (float)n1.y}, radius, color, red };
-		vBuf[4 * i + 2] = (Vertex){ pos, {(float)of.x, (float)of.y}, radius, color, red };
-		vBuf[4 * i + 3] = (Vertex){ pos, {(float)n2.x, (float)n2.y}, radius, color, red };
+		vBuf[4 * i + 0] = (Vertex){ pos, {0.0f, 0.0f}, 0.0f, color, black };
+		vBuf[4 * i + 1] = (Vertex){ pos, {(float)n1.x, (float)n1.y}, radius, color, black };
+		vBuf[4 * i + 2] = (Vertex){ pos, {(float)of.x, (float)of.y}, radius, color, black };
+		vBuf[4 * i + 3] = (Vertex){ pos, {(float)n2.x, (float)n2.y}, radius, color, black };
 	}
 }

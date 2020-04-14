@@ -28,6 +28,7 @@ int main(int argc, char* argv[])
 	stm_setup();
 	sargs_setup(&(sargs_desc) { argc, argv });
 
+
 	sapp_desc app = {
 		.user_data = NewEnvironment(),
 		.init_userdata_cb = Init,
@@ -146,8 +147,9 @@ static void Update(Environment* world)
 	for (int i = 0; i < world->creatures->count; ++i)
 	{
 		Creature* creature = world->creatures->list[i];
-		DrawLine(creature->target, cpvzero, 2.0, green);
-		DrawDot(creature->target, 2.0, green);
+
+		//DrawLine(creature->target, cpvzero, 2.0, black);
+		DrawDot(creature->target, 10.0, black);
 	}
 
 	/* Check the creatures health separately to avoid changing the list mid-loop */
