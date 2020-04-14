@@ -4,6 +4,4 @@
 [submodule "lib/Chipmunk2D"]
 	path = lib/Chipmunk2D
 	url = https://github.com/slembcke/Chipmunk2D
-[submodule "lib/Handmade-Math"]
-	path = lib/Handmade-Math
-	url = https://github.com/HandmadeMath/Handmade-Math
+
