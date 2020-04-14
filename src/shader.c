@@ -91,11 +91,14 @@ void ConstructFrame(cpTransform* matrix, cpFloat scale, cpVect offset)
 
 	cpTransform viewMatrix = cpTransformMult(cpTransformScale(scale, scale), cpTransformTranslate(offset));
 	cpTransform projectionMatrix = cpTransformOrtho(cpBBNew(-hw, -hh, hw, hh));
-	cpTransform mvp = cpTransformMult(viewMatrix, projectionMatrix);
+	cpTransform mvp = cpTransformMult(projectionMatrix, viewMatrix);
 	*matrix = mvp;
 
 	vs_params_t vs_params;
-	vs_params.mvp = (hmm_mat4){ (float)mvp.a, (float)mvp.b , 0.0f, 0.0f, (float)mvp.c , (float)mvp.d , 0.0f, 0.0f, 0.0f, 0.0f, 1.0f, 0.0f, (float)mvp.tx, (float)mvp.ty, 0.0f, 1.0f },
+	vs_params.mvp = (hmm_mat4){ (float)mvp.a, (float)mvp.b, 0.0f, 0.0f,
+								(float)mvp.c, (float)mvp.d, 0.0f, 0.0f,
+								0.0f, 0.0f, 1.0f, 0.0f,
+								(float)mvp.tx, (float)mvp.ty, 0.0f, 1.0f },
 
 	sg_update_buffer(vBufId, vertexBuffer, vertexCount * sizeof(Vertex));
 	sg_update_buffer(iBufId, indexBuffer, indexCount * sizeof(uint16_t));

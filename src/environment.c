@@ -1,5 +1,4 @@
 #include "chipmunk/chipmunk.h"
-
 #include "sokol.h"
 #include "environment.h"
 
