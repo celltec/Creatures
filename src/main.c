@@ -85,11 +85,11 @@ static void FollowCreature(Environment* world) // todo: reorganize
 {
 	if (world->selectedCreature)
 	{
-		world->view.targetOffset = cpvneg(cpBodyGetPosition(cpShapeGetBody(world->selectedCreature->shape)));
+		world->view->targetOffset = cpvneg(cpBodyGetPosition(cpShapeGetBody(world->selectedCreature->shape)));
 	}
 	else
 	{
-		world->view.targetOffset = world->view.offset;
+		world->view->targetOffset = world->view->offset;
 	}
 }
 
@@ -97,32 +97,32 @@ static void SmoothTranslate(Environment* world)
 {
 	static const int resistance = 10;
 
-	cpVect difference = cpvsub(world->view.offset, world->view.targetOffset);
+	cpVect difference = cpvsub(world->view->offset, world->view->targetOffset);
 
-	if (cpvlength(difference) < world->view.scale / resistance)
+	if (cpvlength(difference) < world->view->scale / resistance)
 	{
-		world->view.targetOffset = world->view.offset;
+		world->view->targetOffset = world->view->offset;
 		return;  /* Stop early to prevent changing forever */
 	}
 
 	/* Approach desired value by subtracting some relative value so it looks good */
-	world->view.offset = cpvsub(world->view.offset, cpvmult(difference, 1.0 / resistance));
+	world->view->offset = cpvsub(world->view->offset, cpvmult(difference, 1.0 / resistance));
 }
 
 static void SmoothScaling(Environment* world)
 {
 	static const int resistance = 10;
 
-	cpFloat difference = world->view.scale - world->view.targetScale;
+	cpFloat difference = world->view->scale - world->view->targetScale;
 
-	if (cpfabs(difference) < world->view.scale / resistance)
+	if (cpfabs(difference) < world->view->scale / resistance)
 	{
-		world->view.targetScale = world->view.scale;
+		world->view->targetScale = world->view->scale;
 		return;  /* Stop early to prevent changing forever */
 	}
 
 	/* Approach desired value by subtracting some relative value so it looks good */
-	world->view.scale -= difference / resistance;
+	world->view->scale -= difference / resistance;
 }
 
 static void Update(Environment* world)
@@ -166,8 +166,8 @@ static void Update(Environment* world)
 		}
 	}
 
-	ConstructFrame(world->view.scale, world->view.offset.x, world->view.offset.y);
-	world->view.ready = cpTrue;
+	ConstructFrame(&world->view->matrix, world->view->scale, world->view->offset);
+	world->view->ready = cpTrue;
 }
 
 static void Cleanup(Environment* world)
@@ -175,6 +175,8 @@ static void Cleanup(Environment* world)
 	FreeAllChildren(world->space);
 	cpSpaceFree(world->space);
 	Delete(world->creatures);
+	cpfree(world->view);
+	cpfree(world->mouse);
 	cpfree(world);
 	sargs_shutdown();
 	sg_shutdown();

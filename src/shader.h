@@ -18,7 +18,7 @@
 #endif
 
 void InitGfx(void);
-void ConstructFrame(float scale, float x, float y);
-void DrawPolygon(int corners, const hmm_vec2* vertices, float size, Color color);
+void ConstructFrame(cpTransform* matrix, cpFloat scale, cpVect offset);
+void DrawPolygon(int corners, const cpVect* vertices, float size, Color color);
 
 #endif /* SHADER_H */

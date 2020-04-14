@@ -7,7 +7,8 @@
 // todo: check these numbers, they are probably not the most efficient
 // todo: dynamic allocation possible?
 
-typedef struct { hmm_vec2 pos, uv; float radius; Color fill, outline; } Vertex;
+typedef struct { float x, y; } Point;
+typedef struct { Point pos, uv; float radius; Color fill, outline; } Vertex;
 
 static sg_buffer vBufId, iBufId;
 static uint16_t vertexCount, indexCount;
@@ -79,7 +80,7 @@ void InitGfx(void)
 	};
 }
 
-void ConstructFrame(float scale, float x, float y)
+void ConstructFrame(cpTransform* matrix, cpFloat scale, cpVect offset)
 {
 	int width = sapp_width();
 	int height = sapp_height();
@@ -88,12 +89,13 @@ void ConstructFrame(float scale, float x, float y)
 	float hw = (float)(width >> 1);
 	float hh = (float)(height >> 1);
 
-	hmm_mat4 worldMatrix = HMM_Orthographic(-hw, hw, -hh, hh, 0.0f, 1.0f);
-	hmm_mat4 viewMatrix = HMM_MultiplyMat4(HMM_Scale(HMM_Vec3(scale, scale, 1.0f)), worldMatrix);
-	hmm_mat4 projectionMatrix = HMM_Translate(HMM_Vec3(x, y, 0.0f));
+	cpTransform viewMatrix = cpTransformMult(cpTransformScale(scale, scale), cpTransformTranslate(offset));
+	cpTransform projectionMatrix = cpTransformOrtho(cpBBNew(-hw, -hh, hw, hh));
+	cpTransform mvp = cpTransformMult(viewMatrix, projectionMatrix);
+	*matrix = mvp;
 
 	vs_params_t vs_params;
-	vs_params.mvp = HMM_MultiplyMat4(viewMatrix, projectionMatrix);
+	vs_params.mvp = (hmm_mat4){ (float)mvp.a, (float)mvp.b , 0.0f, 0.0f, (float)mvp.c , (float)mvp.d , 0.0f, 0.0f, 0.0f, 0.0f, 1.0f, 0.0f, (float)mvp.tx, (float)mvp.ty, 0.0f, 1.0f },
 
 	sg_update_buffer(vBufId, vertexBuffer, vertexCount * sizeof(Vertex));
 	sg_update_buffer(iBufId, indexBuffer, indexCount * sizeof(uint16_t));
@@ -126,7 +128,7 @@ static Vertex* push_vertexes(size_t vcount, const uint16_t* index_src, size_t ic
 	return vertex_dst;
 }
 
-void DrawPolygon(int corners, const hmm_vec2* vertices, float size, Color color)
+void DrawPolygon(int corners, const cpVect* vertices, float size, Color color)
 {
 	uint16_t indices[666]; // todo: make dynamic
 
@@ -163,22 +165,18 @@ void DrawPolygon(int corners, const hmm_vec2* vertices, float size, Color color)
 
 	Vertex* vBuf = push_vertexes(4 * corners, indices, 3 * (5 * corners - 2));
 	for (int i = 0; i < corners; i++) {
-		hmm_vec2 v0 = vertices[i];
-		hmm_vec2 vPrev = vertices[(i + (corners - 1)) % corners];
-		hmm_vec2 vNext = vertices[(i + (corners + 1)) % corners];
+		cpVect v0 = vertices[i];
+		cpVect vPrev = vertices[(i + (corners - 1)) % corners];
+		cpVect vNext = vertices[(i + (corners + 1)) % corners];
 		
-		hmm_vec2 n1 = HMM_SubtractVec2(v0, vPrev);
-		n1 = HMM_NormalizeVec2(HMM_Vec2(n1.Y, -n1.X));
+		cpVect n1 = cpvnormalize(cpvrperp(cpvsub(v0, vPrev)));
+		cpVect n2 = cpvnormalize(cpvrperp(cpvsub(vNext, v0)));
+		cpVect of = cpvmult(cpvadd(n1, n2), 1.0 / (cpvdot(n1, n2) + 1.0f));
+		cpVect v = cpvadd(v0, cpvmult(of, inset));
 
-		hmm_vec2 n2 = HMM_SubtractVec2(vNext, v0);
-		n2 = HMM_NormalizeVec2(HMM_Vec2(n2.Y, -n2.X));
-
-		hmm_vec2 of = HMM_MultiplyVec2f(HMM_AddVec2(n1, n2), 1.0f / (HMM_DotVec2(n1, n2) + 1.0f));
-		hmm_vec2 v = HMM_AddVec2(v0, HMM_MultiplyVec2f(of, inset));
-
-		vBuf[4 * i + 0] = (Vertex){ {(float)v.X, (float)v.Y}, {0.0f, 0.0f}, 0.0f, color, color };
-		vBuf[4 * i + 1] = (Vertex){ {(float)v.X, (float)v.Y}, {(float)n1.X, (float)n1.Y}, radius, color, color };
-		vBuf[4 * i + 2] = (Vertex){ {(float)v.X, (float)v.Y}, {(float)of.X, (float)of.Y}, radius, color, color };
-		vBuf[4 * i + 3] = (Vertex){ {(float)v.X, (float)v.Y}, {(float)n2.X, (float)n2.Y}, radius, color, color };
+		vBuf[4 * i + 0] = (Vertex){ {(float)v.x, (float)v.y}, {0.0f, 0.0f}, 0.0f, color, color };
+		vBuf[4 * i + 1] = (Vertex){ {(float)v.x, (float)v.y}, {(float)n1.x, (float)n1.y}, radius, color, color };
+		vBuf[4 * i + 2] = (Vertex){ {(float)v.x, (float)v.y}, {(float)of.x, (float)of.y}, radius, color, color };
+		vBuf[4 * i + 3] = (Vertex){ {(float)v.x, (float)v.y}, {(float)n2.x, (float)n2.y}, radius, color, color };
 	}
 }

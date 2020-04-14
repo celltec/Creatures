@@ -15,16 +15,14 @@ void DrawShape(cpShape* shape, Color color)
 	struct cpSplittingPlane* planes = poly->planes;
 
 #if (__STDC_VERSION__ == 199901L)
-	hmm_vec2 vertices[corners];  /* Only C99 */
+	cpVect vertices[corners];  /* Only C99 */
 #else
-	hmm_vec2* vertices = (hmm_vec2*)alloca(corners * sizeof(hmm_vec2));
+	cpVect* vertices = (cpVect*)alloca(corners * sizeof(cpVect));
 #endif
 
-	/* Store vertices in HMM format */
 	for (int i = 0; i < corners; ++i)
 	{
-		vertices[i].X = (float)planes[i].v0.x;
-		vertices[i].Y = (float)planes[i].v0.y;
+		vertices[i] = planes[i].v0;
 	}
 
 	DrawPolygon(corners, vertices, size, color);
