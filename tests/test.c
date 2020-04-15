@@ -1,8 +1,6 @@
 #include "chipmunk/chipmunk.h"
 
-#ifdef DEBUG
 #include <stdio.h>
-#endif
 
 #include "../src/free.h"
 #include "../src/utils.h"
@@ -15,18 +13,14 @@ void TestRandom(int cases);
 
 void Test(void)
 {
-#ifdef DEBUG
 	printf("Testing...\n");
-#endif
 
 	TestRandom(10000);
 
 	TestList(1);
 	TestList(100);
 
-#ifdef DEBUG
 	printf("Successful!\n\n");
-#endif
 }
 
 void TestList(int cases)
@@ -93,21 +87,24 @@ void TestList(int cases)
 	cpAssertHard(testList->list == NULL, "failed test");
 	cpAssertHard(newCreature1->health == 100.0, "failed test");
 
+	DestroyEnvironment(environment);
 
-	Delete(testList);
-	FreeAllChildren(environment->space);
-	cpSpaceFree(environment->space);
-	cpfree(environment);
+	for (int i = 0; i < cases; ++i)
+	{
+		Environment* stress = NewEnvironment();
+		InitEnvironment(stress);
+		DestroyEnvironment(stress);
+	}
 }
 
 void TestRandom(int cases)
 {
-	const cpFloat min = -1;
-	const cpFloat max = 1;
+	const float min = -1;
+	const float max = 1;
 
 	for (int i = 0; i < cases; ++i)
 	{
-		cpFloat res = randomRange(min, max);
+		float res = randomRange(min, max);
 		cpAssertHard(res >= min && res <= max, "failed test");
 	}
 }

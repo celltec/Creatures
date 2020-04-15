@@ -1,13 +1,14 @@
-#include "chipmunk/chipmunk.h"
+#define HANDMADE_MATH_IMPLEMENTATION
+#define HANDMADE_MATH_NO_SSE
+#define SOKOL_IMPL
 
 #ifdef DEBUG
 #include <stdio.h>
 #include "../tests/test.h"
 #endif
 
-#define SOKOL_IMPL
+#include "chipmunk/chipmunk.h"
 #include "sokol.h"
-#include "free.h"
 #include "draw.h"
 #include "utils.h"
 #include "input.h"
@@ -26,6 +27,7 @@ int main(int argc, char* argv[])
 	stm_setup();
 	sargs_setup(&(sargs_desc) { argc, argv });
 
+
 	sapp_desc app = {
 		.user_data = NewEnvironment(),
 		.init_userdata_cb = Init,
@@ -36,7 +38,8 @@ int main(int argc, char* argv[])
 		.height = 800,
 		.fullscreen = cpFalse,
 		.high_dpi = cpTrue,
-		.sample_count = 4,  /* MSAA */
+		.sample_count = MSAA,
+		.gl_force_gles2 = true,
 		.window_title = "Creatures"
 	};
 
@@ -46,8 +49,8 @@ int main(int argc, char* argv[])
 static void CreateCreature(Environment* world)
 {
 	/* Some random values for testing */
-	const cpVect pos = randomVector(300);
-	const cpFloat size = randomRange(5.0, 20.0);
+	const cpVect pos = randomVector(100);
+	const cpFloat size = randomRange(1.0, 10.0);
 
 	/* Create instance */
 	Creature* creature = Spawn(pos, size);
@@ -83,11 +86,11 @@ static void FollowCreature(Environment* world) // todo: reorganize
 {
 	if (world->selectedCreature)
 	{
-		world->view.targetOffset = cpvneg(cpBodyGetPosition(cpShapeGetBody(world->selectedCreature->shape)));
+		world->view->targetOffset = cpvneg(cpBodyGetPosition(cpShapeGetBody(world->selectedCreature->shape)));
 	}
 	else
 	{
-		world->view.targetOffset = world->view.offset;
+		world->view->targetOffset = world->view->offset;
 	}
 }
 
@@ -95,32 +98,32 @@ static void SmoothTranslate(Environment* world)
 {
 	static const int resistance = 10;
 
-	cpVect difference = cpvsub(world->view.offset, world->view.targetOffset);
+	cpVect difference = cpvsub(world->view->offset, world->view->targetOffset);
 
-	if (cpvlength(difference) < world->view.scale / resistance)
+	if (cpvlength(difference) < world->view->scale / resistance)
 	{
-		world->view.targetOffset = world->view.offset;
+		world->view->targetOffset = world->view->offset;
 		return;  /* Stop early to prevent changing forever */
 	}
 
 	/* Approach desired value by subtracting some relative value so it looks good */
-	world->view.offset = cpvsub(world->view.offset, cpvmult(difference, 1.0 / resistance));
+	world->view->offset = cpvsub(world->view->offset, cpvmult(difference, 1.0 / resistance));
 }
 
 static void SmoothScaling(Environment* world)
 {
 	static const int resistance = 10;
 
-	cpFloat difference = world->view.scale - world->view.targetScale;
+	cpFloat difference = world->view->scale - world->view->targetScale;
 
-	if (cpfabs(difference) < world->view.scale / resistance)
+	if (cpfabs(difference) < world->view->scale / resistance)
 	{
-		world->view.targetScale = world->view.scale;
+		world->view->targetScale = world->view->scale;
 		return;  /* Stop early to prevent changing forever */
 	}
 
 	/* Approach desired value by subtracting some relative value so it looks good */
-	world->view.scale -= difference / resistance;
+	world->view->scale -= difference / resistance;
 }
 
 static void Update(Environment* world)
@@ -132,18 +135,21 @@ static void Update(Environment* world)
 	SmoothScaling(world);
 	SmoothTranslate(world);
 
-	TransformScreen(world->view.scale, world->view.offset);
-	world->view.ready = cpTrue;
+	/* For testing */
+	for (int i = 0; i < world->creatures->count; ++i)
+	{
+		Creature* creature = world->creatures->list[i];
+
+		//DrawLine(creature->target, cpvzero, 2.0, green);
+		DrawDot(creature->target, 1.0, creature->color);
+	}
 
 	for (int i = 0; i < world->creatures->count; ++i)
 	{
 		Creature* creature = world->creatures->list[i];
 
 		Survive(creature);
-		Draw(creature);
-
-		/* For testing */
-		//DrawDot(creature->target, 10.0, black);
+		Display(creature);
 	}
 
 	/* Check the creatures health separately to avoid changing the list mid-loop */
@@ -155,6 +161,7 @@ static void Update(Environment* world)
 		{
 			if (creature == world->selectedCreature)
 			{
+				world->selectedCreature->selected = cpFalse;
 				world->selectedCreature = NULL;
 			}
 
@@ -167,15 +174,13 @@ static void Update(Environment* world)
 		}
 	}
 
-	FlushScreen();
+	ConstructFrame(&world->view->transform, world->view->scale, world->view->offset);
+	world->view->ready = cpTrue;
 }
 
 static void Cleanup(Environment* world)
-{
-	FreeAllChildren(world->space);
-	cpSpaceFree(world->space);
-	Delete(world->creatures);
-	cpfree(world);
+{ 
+	DestroyEnvironment(world);
 	sargs_shutdown();
 	sg_shutdown();
 
