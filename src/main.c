@@ -149,7 +149,7 @@ static void Update(Environment* world)
 		Creature* creature = world->creatures->list[i];
 
 		//DrawLine(creature->target, cpvzero, 2.0, black);
-		DrawDot(creature->target, 10.0, black);
+		DrawDot(creature->target, 10.0, red);
 	}
 
 	/* Check the creatures health separately to avoid changing the list mid-loop */
@@ -161,6 +161,7 @@ static void Update(Environment* world)
 		{
 			if (creature == world->selectedCreature)
 			{
+				world->selectedCreature->selected = cpFalse;
 				world->selectedCreature = NULL;
 			}
 

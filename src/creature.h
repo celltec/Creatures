@@ -11,6 +11,7 @@ typedef struct {
 	cpFloat mobility;
 	cpVect target;
 	Color color;
+	cpBool selected;
 
 	// todo: is making a function table here usefull?
 	// todo: state machine: idle, hunting, etc

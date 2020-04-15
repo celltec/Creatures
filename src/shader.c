@@ -9,7 +9,7 @@
 // todo: dynamic allocation possible?
 
 typedef struct { float x, y; } Point;
-typedef struct { Point pos, uv, center; float radius; Color color; } Vertex;
+typedef struct { Point pos, uv; float radius; Color color, highlight; } Vertex;
 
 static sg_buffer vBufId, iBufId;
 static uint16_t vertexCount, indexCount;
@@ -69,9 +69,9 @@ void InitGfx(void)
 			.attrs = {
 				[ATTR_vs_IN_pos].format = SG_VERTEXFORMAT_FLOAT2,
 				[ATTR_vs_IN_uv].format = SG_VERTEXFORMAT_FLOAT2,
-				[ATTR_vs_IN_center].format = SG_VERTEXFORMAT_FLOAT2,
 				[ATTR_vs_IN_radius].format = SG_VERTEXFORMAT_FLOAT,
-				[ATTR_vs_IN_color].format = SG_VERTEXFORMAT_FLOAT4
+				[ATTR_vs_IN_color].format = SG_VERTEXFORMAT_FLOAT4,
+				[ATTR_vs_IN_highlight].format = SG_VERTEXFORMAT_FLOAT4
 			}
 		}
 	});
@@ -149,10 +149,10 @@ void DrawDot(cpVect pos, cpFloat size, Color color)
 {
 	float r = (float)(size * 0.5f);
 	Vertex* vertexes = push_vertexes(4, (uint16_t[]) { 0, 1, 2, 0, 2, 3 }, 6);
-	vertexes[0] = (Vertex){ {(float)pos.x, (float)pos.y}, {-1, -1}, {0.0f, 0.0f}, r, color };
-	vertexes[1] = (Vertex){ {(float)pos.x, (float)pos.y}, {-1,  1}, {0.0f, 0.0f}, r, color };
-	vertexes[2] = (Vertex){ {(float)pos.x, (float)pos.y}, { 1,  1}, {0.0f, 0.0f}, r, color };
-	vertexes[3] = (Vertex){ {(float)pos.x, (float)pos.y}, { 1, -1}, {0.0f, 0.0f}, r, color };
+	vertexes[0] = (Vertex){ {(float)pos.x, (float)pos.y}, {-1, -1}, r, color };
+	vertexes[1] = (Vertex){ {(float)pos.x, (float)pos.y}, {-1,  1}, r, color };
+	vertexes[2] = (Vertex){ {(float)pos.x, (float)pos.y}, { 1,  1}, r, color };
+	vertexes[3] = (Vertex){ {(float)pos.x, (float)pos.y}, { 1, -1}, r, color };
 }
 
 void DrawLine(cpVect a, cpVect b, cpFloat radius, Color color)
@@ -163,17 +163,17 @@ void DrawLine(cpVect a, cpVect b, cpFloat radius, Color color)
 	cpVect t = cpvnormalize(cpvsub(b, a));
 	float r = (float)radius;
 
-	vertexes[0] = (Vertex){ {(float)a.x, (float)a.y}, {(float)(-t.x + t.y), (float)(-t.x - t.y)}, {0.0f, 0.0f}, r, color };
-	vertexes[1] = (Vertex){ {(float)a.x, (float)a.y}, {(float)(-t.x - t.y), (float)(+t.x - t.y)}, {0.0f, 0.0f}, r, color };
-	vertexes[2] = (Vertex){ {(float)a.x, (float)a.y}, {(float)(-0.0 + t.y), (float)(-t.x + 0.0)}, {0.0f, 0.0f}, r, color };
-	vertexes[3] = (Vertex){ {(float)a.x, (float)a.y}, {(float)(-0.0 - t.y), (float)(+t.x + 0.0)}, {0.0f, 0.0f}, r, color };
-	vertexes[4] = (Vertex){ {(float)b.x, (float)b.y}, {(float)(+0.0 + t.y), (float)(-t.x - 0.0)}, {0.0f, 0.0f}, r, color };
-	vertexes[5] = (Vertex){ {(float)b.x, (float)b.y}, {(float)(+0.0 - t.y), (float)(+t.x - 0.0)}, {0.0f, 0.0f}, r, color };
-	vertexes[6] = (Vertex){ {(float)b.x, (float)b.y}, {(float)(+t.x + t.y), (float)(-t.x + t.y)}, {0.0f, 0.0f}, r, color };
-	vertexes[7] = (Vertex){ {(float)b.x, (float)b.y}, {(float)(+t.x - t.y), (float)(+t.x + t.y)}, {0.0f, 0.0f}, r, color };
+	vertexes[0] = (Vertex){ {(float)a.x, (float)a.y}, {(float)(-t.x + t.y), (float)(-t.x - t.y)}, r, color };
+	vertexes[1] = (Vertex){ {(float)a.x, (float)a.y}, {(float)(-t.x - t.y), (float)(+t.x - t.y)}, r, color };
+	vertexes[2] = (Vertex){ {(float)a.x, (float)a.y}, {(float)(-0.0 + t.y), (float)(-t.x + 0.0)}, r, color };
+	vertexes[3] = (Vertex){ {(float)a.x, (float)a.y}, {(float)(-0.0 - t.y), (float)(+t.x + 0.0)}, r, color };
+	vertexes[4] = (Vertex){ {(float)b.x, (float)b.y}, {(float)(+0.0 + t.y), (float)(-t.x - 0.0)}, r, color };
+	vertexes[5] = (Vertex){ {(float)b.x, (float)b.y}, {(float)(+0.0 - t.y), (float)(+t.x - 0.0)}, r, color };
+	vertexes[6] = (Vertex){ {(float)b.x, (float)b.y}, {(float)(+t.x + t.y), (float)(-t.x + t.y)}, r, color };
+	vertexes[7] = (Vertex){ {(float)b.x, (float)b.y}, {(float)(+t.x - t.y), (float)(+t.x + t.y)}, r, color };
 }
 
-void DrawPolygon(int corners, const cpVect* vertices, cpFloat size, Color color)
+void DrawPolygon(int corners, const cpVect* vertices, cpFloat size, Color color, Color highlight)
 {
 	uint16_t indices[666]; // todo: make dynamic
 
@@ -223,9 +223,9 @@ void DrawPolygon(int corners, const cpVect* vertices, cpFloat size, Color color)
 
 		Point pos = { v.x, v.y };
 
-		vBuf[4 * i + 0] = (Vertex){ pos, {0.0f, 0.0f}, {0.0f, 0.0f}, 0.0f, color };
-		vBuf[4 * i + 1] = (Vertex){ pos, {(float)n1.x, (float)n1.y}, {0.0f, 0.0f}, radius, color };
-		vBuf[4 * i + 2] = (Vertex){ pos, {(float)of.x, (float)of.y}, {0.0f, 0.0f}, radius, color };
-		vBuf[4 * i + 3] = (Vertex){ pos, {(float)n2.x, (float)n2.y}, {0.0f, 0.0f}, radius, color };
+		vBuf[4 * i + 0] = (Vertex){ pos, {0.0f, 0.0f}, 0.0f, color, highlight };
+		vBuf[4 * i + 1] = (Vertex){ pos, {n1.x, n1.y}, radius, color, highlight };
+		vBuf[4 * i + 2] = (Vertex){ pos, {of.x, of.y}, radius, color, highlight };
+		vBuf[4 * i + 3] = (Vertex){ pos, {n2.x, n2.y}, radius, color, highlight };
 	}
 }

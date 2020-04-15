@@ -126,7 +126,7 @@ void Survive(Creature* this)
 
 void Display(Creature* this)
 {
-	DrawShape(this->shape, this->color);
+	DrawShape(this->shape, this->color, this->selected);
 }
 
 void Kill(Creature* this)

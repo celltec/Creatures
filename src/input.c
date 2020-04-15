@@ -41,8 +41,12 @@ void Event(const sapp_event* event, Environment* world)
 		{
 			world->mouse->leftPressed = cpTrue;
 
-			/* Release creature to start manually panning (again) */
-			world->selectedCreature = NULL;
+			/* Release creature to start manually panning again */
+			if (world->selectedCreature)
+			{
+				world->selectedCreature->selected = cpFalse;
+				world->selectedCreature = NULL;
+			}
 		}
 		else if (event->mouse_button == SAPP_MOUSEBUTTON_RIGHT)
 		{
@@ -135,6 +139,7 @@ static void SelectCreature(Environment* world, const cpVect pos)
 
 		if (creature->shape == nearest)
 		{
+			creature->selected = cpTrue;
 			world->selectedCreature = creature;
 
 #ifdef DEBUG

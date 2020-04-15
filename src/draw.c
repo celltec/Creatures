@@ -3,7 +3,7 @@
 #include "shader.h"
 #include "draw.h"
 
-void DrawShape(cpShape* shape, Color color)
+void DrawShape(cpShape* shape, Color color, cpBool highlight)
 {
 	/* Cast to poly shape */
 	cpPolyShape* poly = (cpPolyShape*)shape;
@@ -25,5 +25,12 @@ void DrawShape(cpShape* shape, Color color)
 		vertices[i] = planes[i].v0;
 	}
 
-	DrawPolygon(corners, vertices, size, color);
+	Color highlightColor = { 0 };
+
+	if (highlight)
+	{
+		highlightColor = black;
+	}
+
+	DrawPolygon(corners, vertices, size, color, highlightColor);
 }
