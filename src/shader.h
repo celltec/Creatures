@@ -4,6 +4,8 @@
 #include "sokol.h"
 #include "color.h"
 
+#define MSAA 4
+
 typedef struct {
 	float vpMatrix[16];
 } Uniform;
@@ -23,7 +25,7 @@ typedef struct {
 void InitGfx(void);
 void ConstructFrame(cpTransform* matrix, cpFloat scale, cpVect offset);
 
-void DrawDot(cpVect pos, cpFloat size, Color color);
+void DrawDot(cpVect position, cpFloat size, Color color);
 void DrawLine(cpVect a, cpVect b, cpFloat radius, Color color);
 void DrawPolygon(int corners, const cpVect* vertices, cpFloat size, Color color, Color highlight);
 

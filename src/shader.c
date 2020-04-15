@@ -60,6 +60,7 @@ void InitGfx(void)
 		.label = "pipeline",
 		.shader = shader,
 		.index_type = SG_INDEXTYPE_UINT16,
+		.rasterizer.sample_count = MSAA,
 		.blend = {
 			.enabled = true,
 			.src_factor_rgb = SG_BLENDFACTOR_ONE,
@@ -97,8 +98,8 @@ void ConstructFrame(cpTransform* transform, cpFloat scale, cpVect offset)
 	int height = sapp_height();
 	
 	/* Half size to fit screen */
-	float hw = (float)(width >> 1);
-	float hh = (float)(height >> 1);
+	float hw = (float)(width >> 4);
+	float hh = (float)(height >> 4);
 
 	cpTransform viewMatrix = cpTransformMult(cpTransformScale(scale, scale), cpTransformTranslate(offset));
 	cpTransform projectionMatrix = cpTransformOrtho(cpBBNew(-hw, -hh, hw, hh));
@@ -131,7 +132,7 @@ void ConstructFrame(cpTransform* transform, cpFloat scale, cpVect offset)
 	indexCount = 0;
 }
 
-static Vertex* push_vertexes(size_t vcount, const uint16_t* index_src, size_t icount) {
+static Vertex* push_vertices(size_t vcount, const uint16_t* index_src, size_t icount) {
 	cpAssertHard(vertexCount + vcount <= VERTEX_MAX && indexCount + icount <= INDEX_MAX, "geometry buffer full");
 
 	Vertex* vertex_dst = vertexBuffer + vertexCount;
@@ -145,32 +146,39 @@ static Vertex* push_vertexes(size_t vcount, const uint16_t* index_src, size_t ic
 	return vertex_dst;
 }
 
-void DrawDot(cpVect pos, cpFloat size, Color color)
+void DrawDot(cpVect position, cpFloat size, Color color)
 {
-	float r = (float)(size * 0.5f);
-	Vertex* vertexes = push_vertexes(4, (uint16_t[]) { 0, 1, 2, 0, 2, 3 }, 6);
-	vertexes[0] = (Vertex){ {(float)pos.x, (float)pos.y}, {-1, -1}, r, color };
-	vertexes[1] = (Vertex){ {(float)pos.x, (float)pos.y}, {-1,  1}, r, color };
-	vertexes[2] = (Vertex){ {(float)pos.x, (float)pos.y}, { 1,  1}, r, color };
-	vertexes[3] = (Vertex){ {(float)pos.x, (float)pos.y}, { 1, -1}, r, color };
+	Vertex* vertices = push_vertices(4, (uint16_t[]) { 0, 1, 2, 0, 2, 3 }, 6);
+
+	Point pos = { (float)position.x, (float)position.y };
+	float radius = (float)size;
+
+	vertices[0] = (Vertex){ pos, {-1, -1}, radius, color };
+	vertices[1] = (Vertex){ pos, {-1,  1}, radius, color };
+	vertices[2] = (Vertex){ pos, { 1,  1}, radius, color };
+	vertices[3] = (Vertex){ pos, { 1, -1}, radius, color };
 }
 
 void DrawLine(cpVect a, cpVect b, cpFloat radius, Color color)
 {
-	const uint16_t indexes[] = { 0, 1, 2, 1, 2, 3, 2, 3, 4, 3, 4, 5, 4, 5, 6, 5, 6, 7 };
-	Vertex* vertexes = push_vertexes(8, indexes, 18);
+	const uint16_t indices[] = { 0, 1, 2, 1, 2, 3, 2, 3, 4, 3, 4, 5, 4, 5, 6, 5, 6, 7 };
+	Vertex* vertices = push_vertices(8, indices, 18);
+
+	Point aPos = { (float)a.x, (float)a.y };
+	Point bPos = { (float)b.x, (float)b.y };
 
 	cpVect t = cpvnormalize(cpvsub(b, a));
 	float r = (float)radius;
 
-	vertexes[0] = (Vertex){ {(float)a.x, (float)a.y}, {(float)(-t.x + t.y), (float)(-t.x - t.y)}, r, color };
-	vertexes[1] = (Vertex){ {(float)a.x, (float)a.y}, {(float)(-t.x - t.y), (float)(+t.x - t.y)}, r, color };
-	vertexes[2] = (Vertex){ {(float)a.x, (float)a.y}, {(float)(-0.0 + t.y), (float)(-t.x + 0.0)}, r, color };
-	vertexes[3] = (Vertex){ {(float)a.x, (float)a.y}, {(float)(-0.0 - t.y), (float)(+t.x + 0.0)}, r, color };
-	vertexes[4] = (Vertex){ {(float)b.x, (float)b.y}, {(float)(+0.0 + t.y), (float)(-t.x - 0.0)}, r, color };
-	vertexes[5] = (Vertex){ {(float)b.x, (float)b.y}, {(float)(+0.0 - t.y), (float)(+t.x - 0.0)}, r, color };
-	vertexes[6] = (Vertex){ {(float)b.x, (float)b.y}, {(float)(+t.x + t.y), (float)(-t.x + t.y)}, r, color };
-	vertexes[7] = (Vertex){ {(float)b.x, (float)b.y}, {(float)(+t.x - t.y), (float)(+t.x + t.y)}, r, color };
+	vertices[0] = (Vertex){ aPos, {(float)(-t.x + t.y), (float)(-t.x - t.y)}, r, color };
+	vertices[1] = (Vertex){ aPos, {(float)(-t.x - t.y), (float)(+t.x - t.y)}, r, color };
+	vertices[2] = (Vertex){ aPos, {(float)(-0.0 + t.y), (float)(-t.x + 0.0)}, r, color };
+	vertices[3] = (Vertex){ aPos, {(float)(-0.0 - t.y), (float)(+t.x + 0.0)}, r, color };
+
+	vertices[4] = (Vertex){ bPos, {(float)(+0.0 + t.y), (float)(-t.x - 0.0)}, r, color };
+	vertices[5] = (Vertex){ bPos, {(float)(+0.0 - t.y), (float)(+t.x - 0.0)}, r, color };
+	vertices[6] = (Vertex){ bPos, {(float)(+t.x + t.y), (float)(-t.x + t.y)}, r, color };
+	vertices[7] = (Vertex){ bPos, {(float)(+t.x - t.y), (float)(+t.x + t.y)}, r, color };
 }
 
 void DrawPolygon(int corners, const cpVect* vertices, cpFloat size, Color color, Color highlight)
@@ -208,22 +216,24 @@ void DrawPolygon(int corners, const cpVect* vertices, cpFloat size, Color color,
 	float outset = (float)size + 1.0;
 	float radius = outset - inset;
 
-	Vertex* vBuf = push_vertexes(4 * corners, indices, 3 * (5 * corners - 2));
+
+
+	Vertex* vBuf = push_vertices(4 * corners, indices, 3 * (5 * corners - 2));
 	
 	for (int i = 0; i < corners; i++)
 	{
-		cpVect v0 = vertices[i];
+		cpVect vCurr = vertices[i];
 		cpVect vPrev = vertices[(i + (corners - 1)) % corners];
 		cpVect vNext = vertices[(i + (corners + 1)) % corners];
 		
-		cpVect n1 = cpvnormalize(cpvrperp(cpvsub(v0, vPrev)));
-		cpVect n2 = cpvnormalize(cpvrperp(cpvsub(vNext, v0)));
-		cpVect of = cpvmult(cpvadd(n1, n2), 1.0 / (cpvdot(n1, n2) + 1.0f));
-		cpVect v = cpvadd(v0, cpvmult(of, inset));
+		cpVect n1 = cpvnormalize(cpvrperp(cpvsub(vCurr, vPrev)));
+		cpVect n2 = cpvnormalize(cpvrperp(cpvsub(vNext, vCurr)));
+		cpVect of = cpvmult(cpvadd(n1, n2), 1.0f / (cpvdot(n1, n2) + 1.0f));
+		cpVect v = cpvadd(vCurr, cpvmult(of, inset));
 
 		Point pos = { v.x, v.y };
 
-		vBuf[4 * i + 0] = (Vertex){ pos, {0.0f, 0.0f}, 0.0f, color, highlight };
+		vBuf[4 * i + 0] = (Vertex){ pos, {0.0f, 0.0f}, radius, color, highlight };
 		vBuf[4 * i + 1] = (Vertex){ pos, {n1.x, n1.y}, radius, color, highlight };
 		vBuf[4 * i + 2] = (Vertex){ pos, {of.x, of.y}, radius, color, highlight };
 		vBuf[4 * i + 3] = (Vertex){ pos, {n2.x, n2.y}, radius, color, highlight };

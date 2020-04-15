@@ -1,5 +1,6 @@
 #include "chipmunk/chipmunk.h"
 #include "sokol.h"
+#include "free.h"
 #include "environment.h"
 
 Environment* NewEnvironment(void)
@@ -26,12 +27,26 @@ void InitEnvironment(Environment* environment)
 
 	srand(environment->seed);
 
+	environment->space = space;
+	environment->creatures = NewList();
+
 	environment->view = (View*)cpcalloc(1, sizeof(View));
 	environment->mouse = (Mouse*)cpcalloc(1, sizeof(Mouse));
 
-	environment->space = space;
-	environment->creatures = NewList();
-	environment->timeStep = 1.0 / 60.0;    /* For 60 Hz */
+	environment->timeStep = 1.0 / 60.0;  /* For 60 Hz */
+
+	/* Zoom in the beginning */
 	environment->view->scale = 0.01;
-	environment->view->targetScale = 2.0;  /* Zoom in the beginning */
+	environment->view->targetScale = 1.0;
 }
+
+void DestroyEnvironment(Environment* environment)
+{
+	FreeAllChildren(environment->space);
+	cpSpaceFree(environment->space);
+	Delete(environment->creatures);
+	cpfree(environment->view);
+	cpfree(environment->mouse);
+	cpfree(environment);
+}
+

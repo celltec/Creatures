@@ -33,5 +33,6 @@ typedef struct {
 
 Environment* NewEnvironment(void);
 void InitEnvironment(Environment*);
+void DestroyEnvironment(Environment*);
 
 #endif /* ENVIRONMENT_H */

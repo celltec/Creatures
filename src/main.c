@@ -9,7 +9,6 @@
 
 #include "chipmunk/chipmunk.h"
 #include "sokol.h"
-#include "free.h"
 #include "draw.h"
 #include "utils.h"
 #include "input.h"
@@ -39,7 +38,8 @@ int main(int argc, char* argv[])
 		.height = 800,
 		.fullscreen = cpFalse,
 		.high_dpi = cpTrue,
-		.sample_count = 4,  /* MSAA */
+		.sample_count = MSAA,
+		.gl_force_gles2 = true,
 		.window_title = "Creatures"
 	};
 
@@ -49,8 +49,8 @@ int main(int argc, char* argv[])
 static void CreateCreature(Environment* world)
 {
 	/* Some random values for testing */
-	const cpVect pos = randomVector(300);
-	const cpFloat size = randomRange(1.0, 50.0);
+	const cpVect pos = randomVector(100);
+	const cpFloat size = randomRange(1.0, 10.0);
 
 	/* Create instance */
 	Creature* creature = Spawn(pos, size);
@@ -135,21 +135,21 @@ static void Update(Environment* world)
 	SmoothScaling(world);
 	SmoothTranslate(world);
 
+	/* For testing */
+	for (int i = 0; i < world->creatures->count; ++i)
+	{
+		Creature* creature = world->creatures->list[i];
+
+		//DrawLine(creature->target, cpvzero, 2.0, green);
+		DrawDot(creature->target, 1.0, creature->color);
+	}
+
 	for (int i = 0; i < world->creatures->count; ++i)
 	{
 		Creature* creature = world->creatures->list[i];
 
 		Survive(creature);
 		Display(creature);
-	}
-
-	/* For testing */
-	for (int i = 0; i < world->creatures->count; ++i)
-	{
-		Creature* creature = world->creatures->list[i];
-
-		//DrawLine(creature->target, cpvzero, 2.0, black);
-		DrawDot(creature->target, 10.0, red);
 	}
 
 	/* Check the creatures health separately to avoid changing the list mid-loop */
@@ -179,13 +179,8 @@ static void Update(Environment* world)
 }
 
 static void Cleanup(Environment* world)
-{
-	FreeAllChildren(world->space);
-	cpSpaceFree(world->space);
-	Delete(world->creatures);
-	cpfree(world->view);
-	cpfree(world->mouse);
-	cpfree(world);
+{ 
+	DestroyEnvironment(world);
 	sargs_shutdown();
 	sg_shutdown();
 

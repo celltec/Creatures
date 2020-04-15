@@ -21,7 +21,9 @@ out s_frag FRAG;
 
 void main()
 {
-    gl_Position = vpMatrix * vec4(IN_pos + IN_radius * IN_uv, 0, 1);
+    vec2 pos = IN_pos + IN_radius * IN_uv;
+    gl_Position = vpMatrix * vec4(pos, 0, 1);
+
     FRAG.uv = IN_uv;
     FRAG.color = IN_color;
     FRAG.highlight = IN_highlight;
@@ -41,20 +43,23 @@ out vec4 OUT_color;
 
 void main()
 {
-    vec4 empty = vec4(0.0, 0.0, 0.0, 0.0);
+    vec4 empty = vec4(0.0);
+    vec4 darker = vec4(vec3(0.8), 1.0);
 
-    float len = length(FRAG.uv);
+    float border = length(FRAG.uv);
     float fw = length(fwidth(FRAG.uv));
-    float mask = smoothstep(-0.9, fw - 0.9, -len);
+    float mask = smoothstep(-0.9, fw - 0.9, -border);
     
-    vec4 color = FRAG.color * mask;
+    vec4 color = FRAG.color;
+
+    color += ((darker * FRAG.color - FRAG.color) * smoothstep(0.0, 1.0, border));
 
     if (FRAG.highlight != empty)
     {
-        color = (FRAG.color + (FRAG.highlight - FRAG.color) * smoothstep(0.0, 1.0, len)) * mask;
+        //color += step(border + fw, FRAG.highlight);
     }
 
-    OUT_color = color;
+    OUT_color = color * mask;
 }
 @end
 

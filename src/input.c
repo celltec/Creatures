@@ -95,8 +95,8 @@ void Event(const sapp_event* event, Environment* world)
 	case SAPP_EVENTTYPE_MOUSE_SCROLL:
 	{
 		/* Some arbitrary scroll limits */
-		static const float min = 0.005f;  /* Theoretically open to be smaller */
-		static const float max = 20.0f;    /* The smallest creature is already big enough at this scale */
+		static const float min = 0.001f;  /* Theoretically open to be smaller */
+		static const float max = 1.0f;    /* The smallest creature is already big enough at this scale */
 
 		if (world->view->ready)  /* Prevent multiple executions per frame */
 		{

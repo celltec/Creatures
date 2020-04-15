@@ -36,7 +36,7 @@ static void Damage(Creature* this, cpFloat amount)
 static cpVect SeekTarget(void)
 {
 	/* Test target */
-	return randomVector(300);
+	return randomVector(100);
 }
 
 // todo: IMPORTANT goes in opposite direction if angle is exactly 180° (bug or feature?) [maybe make turn speed constant?]
@@ -66,7 +66,7 @@ Creature* Spawn(const cpVect pos, const cpFloat size)
 
 	/* Some random values for testing */
 	const cpFloat angle = randomRange(0, 2 * CP_PI);
-	const cpFloat mobility = randomRange(50, 500);
+	const cpFloat mobility = randomRange(10, 100);
 	const Color color = randomColor();
 
 	// todo: put in own function
@@ -116,7 +116,7 @@ void Survive(Creature* this)
 	}
 
 	/* Target stuff only for testing */
-	if (cpvnear(cpBodyGetPosition(body), this->target, 6.0 + this->size)) // 5 -> size of dot
+	if (cpvnear(cpBodyGetPosition(body), this->target, 1.0 + this->size))
 	{
 		/* Consume test target */
 		ReplenishEnergy(this, 100.0);
