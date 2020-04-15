@@ -7,7 +7,7 @@ float randomRange(float min, float max)
 
 cpVect randomVector(int maxLenth)
 {
-	return cpvmult(cpvforangle(randomRange(0.0f, 2.0f * CP_PI)), rand32(rand()) % maxLenth);
+	return cpvmult(cpvforangle(randomRange(0.0f, 2.0f * (float)CP_PI)), rand32(rand()) % maxLenth);
 }
 
 /* Lehmer random number generator */
