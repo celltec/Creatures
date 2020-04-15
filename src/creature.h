@@ -11,6 +11,7 @@ typedef struct {
 	cpFloat mobility;
 	cpVect target;
 	Color color;
+	cpBool selected;
 
 	// todo: is making a function table here usefull?
 	// todo: state machine: idle, hunting, etc
@@ -20,6 +21,6 @@ typedef struct {
 Creature* Spawn(const cpVect pos, const cpFloat size);
 void Survive(Creature*);
 void Kill(Creature*);
-void Draw(Creature*);
+void Display(Creature*);
 
 #endif /* CREATURE_H */

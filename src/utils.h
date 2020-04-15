@@ -1,10 +1,10 @@
 #ifndef UTILS_H
 #define UTILS_H
 
-#include "color.h"
+#include <stdint.h>
+#include "chipmunk/chipmunk.h"
 
-Color randomColor(void);
-cpFloat randomRange(cpFloat min, cpFloat max);
+float randomRange(float min, float max);
 cpVect randomVector(int maxLenth);
 uint32_t rand32(uint32_t seed);
 
