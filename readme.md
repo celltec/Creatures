@@ -2,6 +2,8 @@
 
 An environment where simulated creatures are living, reproducing and evolving.
 
+[Live-Demo](https://creatures.celltec.dev) (WebAssembly)
+
 **[work in progress]**
 
 ## Plan
