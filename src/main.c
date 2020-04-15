@@ -16,7 +16,7 @@
 #include "creature.h"
 #include "environment.h"
 
-#define AMOUNT 10
+#define AMOUNT 500
 
 static void Init(Environment*);
 static void Update(Environment*);
@@ -27,7 +27,6 @@ int main(int argc, char* argv[])
 	stm_setup();
 	sargs_setup(&(sargs_desc) { argc, argv });
 
-
 	sapp_desc app = {
 		.user_data = NewEnvironment(),
 		.init_userdata_cb = Init,
@@ -36,8 +35,8 @@ int main(int argc, char* argv[])
 		.cleanup_userdata_cb = Cleanup,
 		.width = 800,
 		.height = 800,
-		.fullscreen = cpFalse,
-		.high_dpi = cpTrue,
+		.fullscreen = false,
+		.high_dpi = true,
 		.sample_count = MSAA,
 		.gl_force_gles2 = true,
 		.window_title = "Creatures"
@@ -49,8 +48,8 @@ int main(int argc, char* argv[])
 static void CreateCreature(Environment* world)
 {
 	/* Some random values for testing */
-	const cpVect pos = randomVector(100);
-	const cpFloat size = randomRange(1.0, 10.0);
+	const cpVect pos = randomVector(3000);
+	const cpFloat size = randomRange(1.0, 20.0);
 
 	/* Create instance */
 	Creature* creature = Spawn(pos, size);
@@ -149,7 +148,7 @@ static void Update(Environment* world)
 		Creature* creature = world->creatures->list[i];
 
 		Survive(creature);
-		Display(creature);
+		Draw(creature);
 	}
 
 	/* Check the creatures health separately to avoid changing the list mid-loop */

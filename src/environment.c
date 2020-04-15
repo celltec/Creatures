@@ -37,7 +37,7 @@ void InitEnvironment(Environment* environment)
 
 	/* Zoom in the beginning */
 	environment->view->scale = 0.01;
-	environment->view->targetScale = 1.0;
+	environment->view->targetScale = 0.3;
 }
 
 void DestroyEnvironment(Environment* environment)

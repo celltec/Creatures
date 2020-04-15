@@ -20,7 +20,7 @@ typedef struct {
 
 Creature* Spawn(const cpVect pos, const cpFloat size);
 void Survive(Creature*);
+void Draw(Creature*);
 void Kill(Creature*);
-void Display(Creature*);
 
 #endif /* CREATURE_H */

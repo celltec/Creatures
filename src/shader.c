@@ -97,12 +97,13 @@ void ConstructFrame(cpTransform* transform, cpFloat scale, cpVect offset)
 	int width = sapp_width();
 	int height = sapp_height();
 	
-	/* Half size to fit screen */
-	float hw = (float)(width >> 4);
-	float hh = (float)(height >> 4);
+	/* Zoom in view */
+	float fw = (float)(width >> 4);
+	float fh = (float)(height >> 4);
+	cpBB viewBox = cpBBNew(-fw, -fh, fw, fh);
 
 	cpTransform viewMatrix = cpTransformMult(cpTransformScale(scale, scale), cpTransformTranslate(offset));
-	cpTransform projectionMatrix = cpTransformOrtho(cpBBNew(-hw, -hh, hw, hh));
+	cpTransform projectionMatrix = cpTransformOrtho(viewBox);
 	cpTransform vp = cpTransformMult(projectionMatrix, viewMatrix); // todo: use projectionMatrix for OSD
 
 	*transform = vp;
