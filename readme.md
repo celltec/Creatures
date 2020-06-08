@@ -2,7 +2,7 @@
 
 An environment where simulated creatures are living, reproducing and evolving.
 
-[Live-Demo](https://creatures.celltec.dev) (WebAssembly)
+[Live-Demo](https://celltec.github.io/) (WebAssembly)
 
 **[work in progress]**
 
@@ -30,5 +30,5 @@ An environment where simulated creatures are living, reproducing and evolving.
  ---
  
  ### Utilized libraries
-[Sokol](https://github.com/floooh/sokol) (OpenGL wrapper)  
-[Chipmunk2D](https://github.com/slembcke/Chipmunk2D) (Physics engine)
+[Sokol](https://github.com/floooh/sokol) (Graphics)  
+[Chipmunk2D](https://github.com/slembcke/Chipmunk2D) (Physics)
